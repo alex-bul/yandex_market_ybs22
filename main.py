@@ -3,7 +3,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 
-from core.error_handler import ValidationErrorResponse
+from core.errors import validation_error_response
 
 from db import models
 from db.database import engine
@@ -27,7 +27,9 @@ models.Base.metadata.create_all(bind=engine)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    return ValidationErrorResponse
+    # TODO убрать
+    print(exc.args)
+    return validation_error_response
 
 
 if __name__ == '__main__':

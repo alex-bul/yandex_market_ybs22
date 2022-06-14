@@ -10,7 +10,8 @@ from schemas import shop_unit
 
 def is_category_exists(db: Session, unit_id: uuid.UUID):
     # print(select(ShopUnit).filter(ShopUnit.id == unit_id, ShopUnit.type == ShopUnitType.category).exists())
-    return db.query(select(ShopUnit).filter(ShopUnit.id == unit_id, ShopUnit.type == ShopUnitType.category).exists())
+    category = db.query(ShopUnit).filter(ShopUnit.id == unit_id, ShopUnit.type == ShopUnitType.category).first()
+    return category is not None
 
 
 def get_shop_unit(db: Session, unit_id: uuid.UUID):
@@ -31,6 +32,11 @@ def create_shop_unit(db: Session, unit: shop_unit.ShopUnitImport, date: datetime
     db.commit()
     db.refresh(db_unit)
     return db_unit
+
+
+def delete_shop_unit(db: Session, unit: ShopUnit):
+    db.delete(unit)
+    db.commit()
 
 # def get_items(db: Session, skip: int = 0, limit: int = 100):
 #     return db.query(Item).offset(skip).limit(limit).all()
