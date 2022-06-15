@@ -18,3 +18,4 @@ class ShopUnit(Base):
                             passive_deletes=True)
     type = Column(Enum(ShopUnitType), nullable=False)
     price = Column(Integer, nullable=True)
+    summary_price = Column(Integer, nullable=True, default=None)
