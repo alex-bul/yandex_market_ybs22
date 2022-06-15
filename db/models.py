@@ -18,4 +18,7 @@ class ShopUnit(Base):
                             passive_deletes=True)
     type = Column(Enum(ShopUnitType), nullable=False)
     price = Column(Integer, nullable=True)
-    summary_price = Column(Integer, nullable=True, default=None)
+
+    # для расчета и хранения средней цены категории
+    # average_price = Column(Integer, nullable=True, default=None)
+    summary_price = Column(Integer, nullable=False, default=0)
