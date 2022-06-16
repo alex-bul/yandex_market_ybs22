@@ -33,7 +33,30 @@ class ShopUnitBase(BaseModel):
                                    "товаров цена равна null.",
                        nullable=True)
 
-    @validator("price")
+
+class ShopUnit(ShopUnitBase):
+    date: datetime.datetime = Field(description="Время последнего обновления элемента.",
+                                    nullable=False,
+                                    example="2022-05-28T21:12:01.000Z")
+    children: List[ForwardRef('ShopUnit')] = Field(default=None,
+                                                   description="Список всех дочерних товаров/категорий. "
+                                                               "Для товаров поле равно null.")
+    price: int = Field(description="Целое число, для категории - это средняя цена всех дочерних "
+                                   "товаров(включая товары подкатегорий). Если цена является не целым числом, "
+                                   "округляется в меньшую сторону до целого числа. Если категория не содержит "
+                                   "товаров цена равна null.",
+                       nullable=True)
+
+    class Config:
+        orm_mode = True
+
+
+class ShopUnitImport(ShopUnitBase):
+    """
+    Объект товара/категории при импорте
+    """
+
+    @validator("price", check_fields=False)
     def price_depend_on_type(cls, v, values):
         unit_type = values.get('type', None)
         if unit_type == ShopUnitType.category:
@@ -44,28 +67,6 @@ class ShopUnitBase(BaseModel):
             if isinstance(v, int) and v >= 0:
                 return v
             raise ValueError('offer price must be >= 0')
-
-
-class ShopUnit(ShopUnitBase):
-    """
-    Объект товара/категории
-    """
-    date: datetime.datetime = Field(description="Время последнего обновления элемента.",
-                                    nullable=False,
-                                    example="2022-05-28T21:12:01.000Z")
-    children: List[ForwardRef('ShopUnit')] = Field(default=None,
-                                                   description="Список всех дочерних товаров/категорий. "
-                                                               "Для товаров поле равно null.")
-
-    class Config:
-        orm_mode = True
-
-
-class ShopUnitImport(ShopUnitBase):
-    """
-    Объект товара/категории при импорте
-    """
-    pass
 
 
 class ShopUnitImportRequest(BaseModel):

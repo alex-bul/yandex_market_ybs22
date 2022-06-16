@@ -9,7 +9,9 @@ from core.errors import not_found_error_response
 from db.database import get_db
 from db.crud import is_category_exists, create_or_update_shop_unit, get_shop_unit, delete_shop_unit, create_shop_unit
 
-from schemas.shop_unit import ShopUnitImportRequest, ShopUnitImport, ShopUnitType
+from schemas import shop_unit as schemas
+
+# from schemas.shop_unit import ShopUnitImportRequest, ShopUnitImport, ShopUnitType
 
 router = APIRouter()
 
@@ -21,12 +23,12 @@ def update_date_of_parent():
 def get_parent_status(db: Session, parent_id: [uuid.UUID, None], shop_unit_dict):
     if not parent_id or is_category_exists(db, parent_id):
         return 'exist'
-    elif parent_id in shop_unit_dict and shop_unit_dict[parent_id].type == ShopUnitType.category:
+    elif parent_id in shop_unit_dict and shop_unit_dict[parent_id].type == schemas.ShopUnitType.category:
         return 'need_create'
     return 'not_found'
 
 
-def safe_create_or_update_shop_unit(db: Session, unit: ShopUnitImport, shop_unit_dict, date):
+def safe_create_or_update_shop_unit(db: Session, unit: schemas.ShopUnitImport, shop_unit_dict, date):
     parent_status = get_parent_status(db, unit.parentId, shop_unit_dict)
     if parent_status == 'exist':
         create_or_update_shop_unit(db, unit, date)
@@ -37,7 +39,7 @@ def safe_create_or_update_shop_unit(db: Session, unit: ShopUnitImport, shop_unit
 
 
 @router.post("/imports")
-async def imports(data: ShopUnitImportRequest, db: Session = Depends(get_db)):
+async def imports(data: schemas.ShopUnitImportRequest, db: Session = Depends(get_db)):
     shop_unit_dict = {}
 
     # проверка уникальности id всех элементов в запросе и создание
@@ -67,3 +69,8 @@ async def delete(id: uuid.UUID, db: Session = Depends(get_db)):
         return Response(status_code=status.HTTP_200_OK)
     else:
         return not_found_error_response
+
+
+@router.get("/nodes/{id}", response_model=schemas.ShopUnit)
+async def nodes(id: uuid.UUID, db: Session = Depends(get_db)):
+    return get_shop_unit(db, id)
