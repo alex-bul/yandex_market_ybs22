@@ -10,6 +10,10 @@ from db.models import ShopUnit, ShopUnitType
 from schemas import shop_unit as schemas_unit
 
 
+def get_shop_unit_price_for_calculate_average_category_price(unit: ShopUnit):
+    return unit.price if unit.type == ShopUnitType.offer else unit.summary_price
+
+
 def is_category_exists(db: Session, unit_id: uuid.UUID) -> bool:
     category = db.query(ShopUnit).filter(ShopUnit.id == unit_id, ShopUnit.type == ShopUnitType.category).first()
     return category is not None
@@ -25,13 +29,10 @@ def update_date_by_unit_id(db: Session, unit_id: uuid.UUID, date: datetime.datet
     )
 
 
-def get_children_nonempty_count(db: Session, parent_id: uuid.UUID) -> int:
-    return db.query(ShopUnit).filter(ShopUnit.parentId == parent_id, ShopUnit.price != None).count()
-
-
-def recalculate_category_price(db: Session, category: ShopUnit, date: Optional[datetime.datetime]):
-    children_count = get_children_nonempty_count(db, category.id)
-    old_average_price = category.price
+def recalculate_category_price(db: Session, category: ShopUnit, date: Optional[datetime.datetime],
+                               old_summary_price: int, offers_change_count: int):
+    category.offers_count += offers_change_count
+    children_count = category.offers_count
     if children_count:
         category.price = category.summary_price // children_count
     else:
@@ -40,7 +41,8 @@ def recalculate_category_price(db: Session, category: ShopUnit, date: Optional[d
         category.date = date
     db.commit()
     if category.parentId:
-        update_unit_parents_data(db, category.parentId, category.parentId, old_average_price, category.price, date)
+        update_unit_parents_data(db, category.parentId, category.parentId, old_summary_price,
+                                 category.summary_price, date, offers_change_count=offers_change_count)
 
 
 def create_or_update_shop_unit(db: Session, unit: schemas_unit.ShopUnitImport, date: datetime.datetime):
@@ -52,7 +54,22 @@ def create_or_update_shop_unit(db: Session, unit: schemas_unit.ShopUnitImport, d
 
 
 def update_unit_parents_data(db: Session, old_parent_id: Optional[uuid.UUID], new_parent_id: Optional[uuid.UUID],
-                             old_price: Optional[int], new_price: Optional[int], date: Optional[datetime.datetime]):
+                             old_price: Optional[int], new_price: Optional[int], date: Optional[datetime.datetime],
+                             offers_change_count: int = 0):
+    """
+    Рекурсивно обновляет данные "вышестоящих" родительских категорий при изменении/добавлении товара,
+    в частности обновляет среднюю цену по категории.
+    Старое и новое состояние параметров цена, айди категории одинаково, если они не меняются у товара.
+
+    :param db: сессия sqlalchemy
+    :param old_parent_id: айди старой категории товара
+    :param new_parent_id: айди новой категории товара
+    :param old_price: старая цена товара
+    :param new_price: новая цена товара
+    :param date: дата изменения
+    :param offers_change_count: число, на которое меняется общее количество товаров в категории
+    :return:
+    """
     if old_parent_id == new_parent_id and old_price == new_price or (old_parent_id is None and new_parent_id is None):
         return
 
@@ -61,22 +78,28 @@ def update_unit_parents_data(db: Session, old_parent_id: Optional[uuid.UUID], ne
         new_price = int(new_price or 0)
 
         parent = get_shop_unit(db, old_parent_id)
+
+        old_summary_price = parent.summary_price
         parent.summary_price += (new_price - old_price)
-        recalculate_category_price(db, parent, date)
+        recalculate_category_price(db, parent, date, old_summary_price, offers_change_count)
     else:
         if old_parent_id:
             if old_price:
                 parent = get_shop_unit(db, old_parent_id)
+
+                old_summary_price = parent.summary_price
                 parent.summary_price -= old_price
-                recalculate_category_price(db, parent, date)
+                recalculate_category_price(db, parent, date, old_summary_price, -1)
             elif date:
                 update_date_by_unit_id(db, old_parent_id, date)
 
         if new_parent_id:
             if new_price:
                 parent = get_shop_unit(db, new_parent_id)
+
+                old_summary_price = parent.summary_price
                 parent.summary_price += new_price
-                recalculate_category_price(db, parent, date)
+                recalculate_category_price(db, parent, date, old_summary_price, 1)
             elif date:
                 update_date_by_unit_id(db, new_parent_id, date)
     db.commit()
@@ -84,18 +107,19 @@ def update_unit_parents_data(db: Session, old_parent_id: Optional[uuid.UUID], ne
 
 def update_shop_unit(db: Session, unit: ShopUnit, unit_import: schemas_unit.ShopUnitImport, date: datetime.datetime):
     old_parent_id = unit.parentId
-    old_price = unit.price
+    old_price = unit.price if unit.type == ShopUnitType.offer else unit.summary_price
 
-    # так как price=null у категории во входных данных, то по особому обрабатываем это поле для категорий
+    # Разная обработка поля price для каждого типа
     update_dict = unit_import.dict()
     if unit.type == ShopUnitType.category:
         del update_dict['price']
-        new_price = unit.price
+        new_price = unit.summary_price
     else:
         new_price = unit_import.price
 
     for key, val in update_dict.items():
         setattr(unit, key, val)
+    unit.date = date
 
     db.commit()
 
@@ -109,7 +133,8 @@ def create_shop_unit(db: Session, unit: schemas_unit.ShopUnitImport, date: datet
     db.refresh(db_unit)
 
     if db_unit.parentId:
-        update_unit_parents_data(db, None, db_unit.parentId, None, db_unit.price, date)
+        new_price = unit.price if unit.type == ShopUnitType.offer else None
+        update_unit_parents_data(db, None, db_unit.parentId, None, new_price, date)
 
     return db_unit
 
@@ -118,21 +143,11 @@ def delete_shop_unit(db: Session, unit: ShopUnit):
     db.delete(unit)
 
     if unit.parentId:
-        update_unit_parents_data(db, unit.parentId, None, unit.price, None, None)
+        old_price = unit.price if unit.type == ShopUnitType.offer else unit.summary_price
+        update_unit_parents_data(db, unit.parentId, None, old_price, None, None)
 
     db.commit()
 
-
-# def get_items(db: Session, skip: int = 0, limit: int = 100):
-#     return db.query(Item).offset(skip).limit(limit).all()
-#
-#
-# def create_user_item(db: Session, item: schemas.ItemCreate, user_id: int):
-#     db_item = Item(**item.dict(), owner_id=user_id)
-#     db.add(db_item)
-#     db.commit()
-#     db.refresh(db_item)
-#     return db_item
 
 # TODO убрать
 c = {

@@ -3,15 +3,12 @@ import uuid
 from fastapi import APIRouter, Depends, Response, status
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
 from core.errors import not_found_error_response
 from db.database import get_db
-from db.crud import is_category_exists, create_or_update_shop_unit, get_shop_unit, delete_shop_unit, create_shop_unit
+from db.crud import is_category_exists, create_or_update_shop_unit, get_shop_unit, delete_shop_unit
 
 from schemas import shop_unit as schemas
-
-# from schemas.shop_unit import ShopUnitImportRequest, ShopUnitImport, ShopUnitType
 
 router = APIRouter()
 
@@ -73,4 +70,8 @@ async def delete(id: uuid.UUID, db: Session = Depends(get_db)):
 
 @router.get("/nodes/{id}", response_model=schemas.ShopUnit)
 async def nodes(id: uuid.UUID, db: Session = Depends(get_db)):
-    return get_shop_unit(db, id)
+    unit = get_shop_unit(db, id)
+    if unit:
+        return get_shop_unit(db, id)
+    else:
+        return not_found_error_response

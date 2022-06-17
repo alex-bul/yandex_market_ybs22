@@ -6,6 +6,8 @@ from typing import List, ForwardRef, Literal, Optional
 
 from pydantic import BaseModel, Field, validator, constr
 
+from core.utils import convert_datetime_to_iso_8601_with_z_suffix_and_utc
+
 
 class ShopUnitType(str, Enum):
     """
@@ -25,13 +27,22 @@ class ShopUnitBase(BaseModel):
                                 description="UUID родительской категории",
                                 example="3fa85f64-5717-4562-b3fc-2c963f66a333",
                                 nullable=True)
-    type: ShopUnitType
+    type: ShopUnitType = Field(example=ShopUnitType.offer)
     price: int = Field(default=None,
                        description="Целое число, для категории - это средняя цена всех дочерних "
                                    "товаров(включая товары подкатегорий). Если цена является не целым числом, "
                                    "округляется в меньшую сторону до целого числа. Если категория не содержит "
                                    "товаров цена равна null.",
                        nullable=True)
+
+    # _normalize_datetime = validator(
+    #     "date",
+    #     allow_reuse=True, check_fields=False)(transform_to_utc_datetime)
+
+    class Config:
+        json_encoders = {
+            datetime.datetime: convert_datetime_to_iso_8601_with_z_suffix_and_utc
+        }
 
 
 class ShopUnit(ShopUnitBase):
@@ -40,15 +51,28 @@ class ShopUnit(ShopUnitBase):
                                     example="2022-05-28T21:12:01.000Z")
     children: List[ForwardRef('ShopUnit')] = Field(default=None,
                                                    description="Список всех дочерних товаров/категорий. "
-                                                               "Для товаров поле равно null.")
-    price: int = Field(description="Целое число, для категории - это средняя цена всех дочерних "
-                                   "товаров(включая товары подкатегорий). Если цена является не целым числом, "
-                                   "округляется в меньшую сторону до целого числа. Если категория не содержит "
-                                   "товаров цена равна null.",
-                       nullable=True)
+                                                               "Для товаров поле равно null.",
+                                                   nullable=True)
+    price: Optional[int] = Field(description="Целое число, для категории - это средняя цена всех дочерних "
+                                             "товаров(включая товары подкатегорий). Если цена является не целым числом, "
+                                             "округляется в меньшую сторону до целого числа. Если категория не содержит "
+                                             "товаров цена равна null.",
+                                 nullable=True)
+
+    @validator("children")
+    def children_depend_on_type(cls, v, values):
+        unit_type = values.get('type', None)
+        if unit_type == ShopUnitType.offer:
+            if v:
+                raise ValueError('offer cant have children')
+            return None
+        return v
 
     class Config:
         orm_mode = True
+        # json_encoders = {
+        #     datetime: convert_datetime_to_iso_8601_with_z_suffix
+        # }
 
 
 class ShopUnitImport(ShopUnitBase):
