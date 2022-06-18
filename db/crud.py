@@ -28,6 +28,10 @@ def update_date_by_unit_id(db: Session, unit_id: uuid.UUID, date: datetime.datet
         update(ShopUnit).where(ShopUnit.id == unit_id).values(date=date)
     )
 
+    unit = get_shop_unit(db, unit_id)
+    if unit.parentId:
+        update_date_by_unit_id(db, unit.parentId, date)
+
 
 def recalculate_category_price(db: Session, category: ShopUnit, date: Optional[datetime.datetime],
                                old_summary_price: int, offers_change_count: int):
@@ -38,7 +42,7 @@ def recalculate_category_price(db: Session, category: ShopUnit, date: Optional[d
     else:
         category.price = None
     if date:
-        category.date = date
+        update_date_by_unit_id(db, category.id, date)
     db.commit()
     if category.parentId:
         update_unit_parents_data(db, category.parentId, category.parentId, old_summary_price,
