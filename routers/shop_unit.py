@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from core.errors import not_found_error_response
 from db.database import get_db
-from db.crud import is_category_exists, create_or_update_shop_unit, get_shop_unit, delete_shop_unit
+from db.methods import is_category_exists, create_or_update_shop_unit, get_shop_unit, delete_shop_unit
 
 from schemas import shop_unit as schemas
 
