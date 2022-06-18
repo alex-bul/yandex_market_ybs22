@@ -60,16 +60,19 @@ def create_shop_unit(db: Session, data: schemas_unit.ShopUnitImport, date: datet
 def update_shop_unit(db: Session, unit: [Category, Offer], unit_import: schemas_unit.ShopUnitImport,
                      date: datetime.datetime):
     old_parent_id = unit.parentId
-    old_price = unit.price if unit.type == ShopUnitType.offer else unit.summary_price
 
     update_dict = unit_import.dict()
     del update_dict['type']
 
     # Разная обработка поля price для каждого типа
-    if unit.type == ShopUnitType.category:
+    if isinstance(unit, Category):
         del update_dict['price']
+
+        # при обновлении категории средняя цена не меняется
+        old_price = unit.summary_price
         new_price = unit.summary_price
     else:
+        old_price = unit.price
         new_price = unit_import.price
 
     for key, val in update_dict.items():

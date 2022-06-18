@@ -24,7 +24,7 @@ from schemas.shop_unit import ShopUnitType
 #     offers_count = Column(Integer, nullable=False, default=0)
 
 
-class ShopUnita(Base):
+class ShopUnit(Base):
     __abstract__ = True
 
     id = Column(UUID(as_uuid=True), primary_key=True, index=True)
@@ -32,23 +32,37 @@ class ShopUnita(Base):
     date = Column(DateTime(timezone=True), nullable=False)
 
 
-class Category(ShopUnita):
+class Category(ShopUnit):
     __tablename__ = "categories"
 
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True)
+
     parentId = Column(UUID(as_uuid=True), ForeignKey("categories.id", ondelete='CASCADE'))
-    children = relationship("ShopUnit",
-                            backref=backref('parent', remote_side=[id]),
-                            cascade="all, delete",
-                            passive_deletes=True)
+    children_category = relationship("Category",
+                                     backref=backref('parent', remote_side="Category.id"),
+                                     cascade="all, delete",
+                                     passive_deletes=True)
+    children_offer = relationship("Offer",
+                                  backref=backref('parent', remote_side="Category.id"),
+                                  cascade="all, delete",
+                                  passive_deletes=True)
+
     price = Column(Integer, nullable=True)
 
     summary_price = Column(Integer, nullable=False, default=0)
     offers_count = Column(Integer, nullable=False, default=0)
 
+    type = ShopUnitType.category
 
-class Offer(ShopUnita):
+    @property
+    def children(self):
+        return self.children_category + self.children_offer
+
+
+class Offer(ShopUnit):
     __tablename__ = "offers"
 
     parentId = Column(UUID(as_uuid=True), ForeignKey("categories.id", ondelete='CASCADE'))
     price = Column(Integer, nullable=False)
 
+    type = ShopUnitType.offer
