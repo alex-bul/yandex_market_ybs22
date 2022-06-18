@@ -28,6 +28,7 @@ class ShopUnitBase(BaseModel):
                                 example="3fa85f64-5717-4562-b3fc-2c963f66a333",
                                 nullable=True)
     type: ShopUnitType = Field(example=ShopUnitType.offer)
+
     price: int = Field(default=None,
                        description="Целое число, для категории - это средняя цена всех дочерних "
                                    "товаров(включая товары подкатегорий). Если цена является не целым числом, "
@@ -53,11 +54,6 @@ class ShopUnit(ShopUnitBase):
                                                    description="Список всех дочерних товаров/категорий. "
                                                                "Для товаров поле равно null.",
                                                    nullable=True)
-    price: Optional[int] = Field(description="Целое число, для категории - это средняя цена всех дочерних "
-                                             "товаров(включая товары подкатегорий). Если цена является не целым числом, "
-                                             "округляется в меньшую сторону до целого числа. Если категория не содержит "
-                                             "товаров цена равна null.",
-                                 nullable=True)
 
     @validator("children")
     def children_depend_on_type(cls, v, values):
@@ -80,7 +76,7 @@ class ShopUnitImport(ShopUnitBase):
     Объект товара/категории при импорте
     """
 
-    @validator("price", check_fields=False)
+    @validator("price", always=True)
     def price_depend_on_type(cls, v, values):
         unit_type = values.get('type', None)
         if unit_type == ShopUnitType.category:

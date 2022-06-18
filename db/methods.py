@@ -4,7 +4,6 @@ import uuid
 from typing import Optional
 
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import update
 
 from db.models import Offer, Category, ShopUnitType
 from schemas import shop_unit as schemas_unit
