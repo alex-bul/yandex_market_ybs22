@@ -8,16 +8,20 @@ client = TestClient(app)
 # ВАЛИДАЦИЯ
 
 OFFER_VALIDATION_ACTIONS = [
-    ("type", None, "Excepted Validation error. Type must be == CATEGORY or OFFER, current type == None"),
-    ("name", None, "Excepted Validation error. Name cannot be None, current name == None"),
-    ("id", 213, "Excepted Validation error. Id must be uuid object, current id not uuid object"),
-    ("ParentId", 213, "Excepted Validation error. ParentId must be uuid object, current ParentId not uuid object"),
-    ("price", None, "Excepted Validation error. Price must be >= 0, current price == None"),
+    ("type", None, "Excepted Validation error. Type must be == CATEGORY or OFFER, current type == {0}"),
+    ("type", "Car", "Excepted Validation error. Type must be == CATEGORY or OFFER, current type == {0}"),
+    ("name", None, "Excepted Validation error. Name cannot be None, current name == {0}"),
+    ("name", 3213, "Excepted Validation error. Name cannot be None, current name == {0}"),
+    ("id", 213, "Excepted Validation error. Id must be uuid object, current id == {0}"),
+    ("ParentId", "fsdfdfs", "Excepted Validation error. ParentId must be uuid object, current ParentId == {0}"),
+    ("ParentId", 213, "Excepted Validation error. ParentId must be uuid object, current ParentId == {0}"),
+    ("price", None, "Excepted Validation error. Price must be >= 0, current price == {0}"),
+    ("price", -2000, "Excepted Validation error. Price must be >= 0, current price == {0}"),
 ]
 
 # Большая часть параметров была проверена при импорте оффера
 CATEGORY_VALIDATION_ACTIONS = [
-    ("price", 10, "Excepted Validation error. Price must be None, current price == 10"),
+    ("price", 10, "Excepted Validation error. Price must be None, current price == {0}"),
 ]
 
 offer_import = {
@@ -47,7 +51,7 @@ def test_offer_imports_validation():
         )
         assert response.status_code == 400
         assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}, \
-            fail_description
+            fail_description.format(val)
 
 
 def test_category_imports_validation():
@@ -61,7 +65,7 @@ def test_category_imports_validation():
         )
         assert response.status_code == 400
         assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}, \
-            fail_description
+            fail_description.format(val)
 
 
 def test_category_price_validation():
@@ -125,6 +129,27 @@ def test_unique_id_in_request():
             }
         ],
         "updateDate": "2022-02-01T12:00:00.000Z"
+    }
+
+    response = client.post(
+        "/imports",
+        json=data
+    )
+    assert response.status_code == 400
+    assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}
+
+
+def test_date_validation():
+    data = {
+        "items": [
+            {
+                "type": "CATEGORY",
+                "name": "Товары",
+                "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+                "parentId": None,
+            }
+        ],
+        "updateDate": "2022.02.01 14:00:00"
     }
 
     response = client.post(

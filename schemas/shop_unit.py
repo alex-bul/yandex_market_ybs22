@@ -4,9 +4,10 @@ import uuid
 from enum import Enum
 from typing import List, ForwardRef, Literal, Optional
 
-from pydantic import BaseModel, Field, validator, constr
+from pydantic import BaseModel, Field, validator, constr, conint
 
 from core.utils import convert_datetime_to_iso_8601_with_z_suffix_and_utc
+from core.validators import is_datetime_string_iso8601
 
 
 class ShopUnitType(str, Enum):
@@ -18,27 +19,25 @@ class ShopUnitType(str, Enum):
 
 
 class ShopUnitBase(BaseModel):
-    id: uuid.UUID = Field(description="Уникальный идентфикатор",
+    id: uuid.UUID = Field(description="Уникальный идентификатор",
                           example="3fa85f64-5717-4562-b3fc-2c963f66a333",
                           nullable=False)
-    name: constr(min_length=1) = Field(description="Имя категории/товара",
-                                       nullable=False)
+    name: constr(strict=True, min_length=1) = Field(description="Имя категории/товара",
+                                                    nullable=False)
     parentId: uuid.UUID = Field(default=None,
                                 description="UUID родительской категории",
                                 example="3fa85f64-5717-4562-b3fc-2c963f66a333",
                                 nullable=True)
     type: ShopUnitType = Field(example=ShopUnitType.offer)
 
-    price: int = Field(default=None,
-                       description="Целое число, для категории - это средняя цена всех дочерних "
-                                   "товаров(включая товары подкатегорий). Если цена является не целым числом, "
-                                   "округляется в меньшую сторону до целого числа. Если категория не содержит "
-                                   "товаров цена равна null.",
-                       nullable=True)
-
-    # _normalize_datetime = validator(
-    #     "date",
-    #     allow_reuse=True, check_fields=False)(transform_to_utc_datetime)
+    price: conint(strict=True) = Field(default=None,
+                                       description="Целое число, для категории - это средняя цена всех дочерних "
+                                                   "товаров(включая товары подкатегорий). "
+                                                   "Если цена является не целым числом, "
+                                                   "округляется в меньшую сторону до целого числа. "
+                                                   "Если категория не содержит "
+                                                   "товаров цена равна null.",
+                                       nullable=True)
 
     class Config:
         json_encoders = {
@@ -94,6 +93,10 @@ class ShopUnitImportRequest(BaseModel):
     updateDate: datetime.datetime = Field(description="Время обновления добавляемых товаров/категорий.",
                                           nullable=False,
                                           example="2022-05-28T21:12:01.000Z")
+
+    @validator("updateDate", pre=True, always=True)
+    def check_update_date_format(cls, v):
+        return is_datetime_string_iso8601(v)
 
 
 class ShopUnitStatisticUnit(ShopUnitBase):
