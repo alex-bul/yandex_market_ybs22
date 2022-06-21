@@ -5,7 +5,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from db.models import Offer, Category, ShopUnitType
+from db.models import Offer, Category, ShopUnitType, ShopUnitHistory
 from schemas import shop_unit as schemas_unit
 
 
@@ -19,6 +19,12 @@ def get_category(db: Session, id: uuid.UUID):
 
 def get_shop_unit(db: Session, id: uuid.UUID):
     return get_category(db, id) or get_offer(db, id)
+
+
+def get_sales(db: Session, date_end: datetime.datetime):
+    date_start = date_end - datetime.timedelta(hours=24)
+    return db.query(ShopUnitHistory).filter(ShopUnitHistory.date >= date_start).filter(
+        ShopUnitHistory.date <= date_end).all()
 
 
 def is_category_exists(db: Session, id: uuid.UUID) -> bool:
@@ -52,9 +58,24 @@ def create_category(db: Session, data: schemas_unit.ShopUnitImport, date: dateti
 
 def create_shop_unit(db: Session, data: schemas_unit.ShopUnitImport, date: datetime.datetime):
     if data.type == ShopUnitType.category:
-        return create_category(db, data, date)
+        unit = create_category(db, data, date)
     elif data.type == ShopUnitType.offer:
-        return create_offer(db, data, date)
+        unit = create_offer(db, data, date)
+    else:
+        raise ValueError("invalid shop unit type")
+    update_date_and_history(db, unit, date)
+
+    return unit
+
+
+def create_shop_unit_history(db: Session, db_unit: [Category, Offer]):
+    unit = schemas_unit.ShopUnit.from_orm(db_unit)
+    history_object = ShopUnitHistory(**unit.dict(include={"id", "type", "name", "parentId", "price", "date"}))
+    db.add(history_object)
+    db.commit()
+    db.refresh(history_object)
+
+    return history_object
 
 
 def update_shop_unit(db: Session, unit: [Category, Offer], unit_import: schemas_unit.ShopUnitImport,
@@ -154,6 +175,7 @@ def update_unit_parents_data(db: Session, old_parent_id: Optional[uuid.UUID], ne
 
 def update_date_and_history(db: Session, unit: [Category, Offer], date: datetime.datetime):
     unit.date = date
+    create_shop_unit_history(db, unit)
     db.commit()
 
 

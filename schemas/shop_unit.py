@@ -65,9 +65,6 @@ class ShopUnit(ShopUnitBase):
 
     class Config:
         orm_mode = True
-        # json_encoders = {
-        #     datetime: convert_datetime_to_iso_8601_with_z_suffix
-        # }
 
 
 class ShopUnitImport(ShopUnitBase):
@@ -104,6 +101,8 @@ class ShopUnitStatisticUnit(ShopUnitBase):
                                     nullable=False,
                                     example="2022-05-28T21:12:01.000Z")
 
+
+# TODO проверка даты на iso в скидках и истории
 
 class ShopUnitStatisticResponse(BaseModel):
     items: List[ShopUnitStatisticUnit] = Field(description="История в произвольном порядке.")

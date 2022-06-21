@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 SQLALCHEMY_DATABASE_URL = "postgresql://postgres:1234@127.0.0.1:5432/yandex_market"
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL
+    SQLALCHEMY_DATABASE_URL, connect_args={"options": "-c timezone=utc"}
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
