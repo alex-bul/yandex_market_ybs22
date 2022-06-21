@@ -21,10 +21,17 @@ def get_shop_unit(db: Session, id: uuid.UUID):
     return get_category(db, id) or get_offer(db, id)
 
 
-def get_sales(db: Session, date_end: datetime.datetime):
+def get_offer_list_sales(db: Session, date_end: datetime.datetime):
     date_start = date_end - datetime.timedelta(hours=24)
-    return db.query(ShopUnitHistory).filter(ShopUnitHistory.date >= date_start).filter(
-        ShopUnitHistory.date <= date_end).all()
+    history_rows = db.query(ShopUnitHistory.id).filter(ShopUnitHistory.date > date_start).filter(
+        ShopUnitHistory.date < date_end).filter(ShopUnitHistory.type == ShopUnitType.offer).distinct(
+        ShopUnitHistory.id).all()
+    return [get_offer(db, row[0]) for row in history_rows]
+
+
+def get_unit_statistic(db: Session, id: uuid.UUID, date_start: datetime.datetime, date_end: datetime.datetime):
+    return db.query(ShopUnitHistory).filter(ShopUnitHistory.id == id).filter(ShopUnitHistory.date > date_start).filter(
+        ShopUnitHistory.date < date_end).all()
 
 
 def is_category_exists(db: Session, id: uuid.UUID) -> bool:

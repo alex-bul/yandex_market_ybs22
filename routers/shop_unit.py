@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 from core.validators import is_datetime_string_iso8601
 from core.errors import not_found_error_response
 from db.database import get_db
-from db.methods import is_category_exists, create_or_update_shop_unit, get_shop_unit, delete_shop_unit, get_sales
+from db.methods import is_category_exists, create_or_update_shop_unit, get_shop_unit, delete_shop_unit, \
+    get_offer_list_sales, get_unit_statistic
 
 from schemas import shop_unit as schemas
 
@@ -109,7 +110,25 @@ async def sales(date: str, db: Session = Depends(get_db)):
         date = datetime.datetime.strptime(is_datetime_string_iso8601(date), "%Y-%m-%dT%H:%M:%S.%fZ")
     except ValueError:
         raise RequestValidationError("invalid date format. Date must be in iso8601 format")
-    sales_list = get_sales(db, date)
-    items = [i.as_dict(exclude=["history_id"]) for i in sales_list]
+    items = get_offer_list_sales(db, date)
+    result = {"items": items}
+    return result
+
+
+@router.get("/nodes/{id}/statistic", response_model=schemas.ShopUnitStatisticResponse)
+async def nodes_statistic(id: uuid.UUID, date_start: str, date_end: str, db: Session = Depends(get_db)):
+    try:
+        date_start = datetime.datetime.strptime(is_datetime_string_iso8601(date_start), "%Y-%m-%dT%H:%M:%S.%fZ")
+        date_end = datetime.datetime.strptime(is_datetime_string_iso8601(date_end), "%Y-%m-%dT%H:%M:%S.%fZ")
+        if date_start >= date_end:
+            raise RequestValidationError("invalid interval. date_start must be < date_end")
+    except ValueError:
+        raise RequestValidationError("invalid date format. Date must be in iso8601 format")
+
+    unit = get_shop_unit(db, id)
+    if not unit:
+        return not_found_error_response
+
+    items = get_unit_statistic(db, id, date_start, date_end)
     result = {"items": items}
     return result

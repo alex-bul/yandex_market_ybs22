@@ -101,6 +101,9 @@ class ShopUnitStatisticUnit(ShopUnitBase):
                                     nullable=False,
                                     example="2022-05-28T21:12:01.000Z")
 
+    class Config:
+        orm_mode = True
+
 
 # TODO проверка даты на iso в скидках и истории
 
