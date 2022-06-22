@@ -4,7 +4,8 @@ import json
 import subprocess
 import sys
 
-from fastapi import status
+from urllib import parse
+from fastapi import status as fastapi_status
 from fastapi.testclient import TestClient
 from main import app
 
@@ -295,7 +296,7 @@ UPDATE_WITHOUT_CHANGES = [
                 "price": 69999
             }
         ],
-        "updateDate": "2022-02-08T15:00:00.000Z"
+        "updateDate": "2022-02-08T07:00:00.000Z"
     }
 ]
 
@@ -305,7 +306,7 @@ EXPECTED_TREE_AFTER_NO_CHANGES = {
     "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
     "price": 58599,
     "parentId": None,
-    "date": "2022-02-08T15:00:00.000Z",
+    "date": "2022-02-08T07:00:00.000Z",
     "children": [
         {
             "type": "CATEGORY",
@@ -313,7 +314,7 @@ EXPECTED_TREE_AFTER_NO_CHANGES = {
             "id": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
             "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
             "price": 50999,
-            "date": "2022-02-08T15:00:00.000Z",
+            "date": "2022-02-08T07:00:00.000Z",
             "children": [
                 {
                     "type": "OFFER",
@@ -339,7 +340,7 @@ EXPECTED_TREE_AFTER_NO_CHANGES = {
                     "id": "73bc3b36-02d1-4245-ab35-3106c9ee1c65",
                     "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
                     "price": 69999,
-                    "date": "2022-02-08T15:00:00.000Z",
+                    "date": "2022-02-08T07:00:00.000Z",
                     "children": None
                 }
             ]
@@ -375,6 +376,171 @@ EXPECTED_TREE_AFTER_NO_CHANGES = {
     ]
 }
 
+EXPECTED_STATS = {
+    "items": [
+        {
+            "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+            "name": "Товары",
+            "parentId": None,
+            "type": "CATEGORY",
+            "price": None,
+            "date": "2022-02-01T12:00:00.000Z"
+        },
+        {
+            "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+            "name": "Товары",
+            "parentId": None,
+            "type": "CATEGORY",
+            "price": 69999,
+            "date": "2022-02-02T12:00:00.000Z"
+        },
+        {
+            "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+            "name": "Товары",
+            "parentId": None,
+            "type": "CATEGORY",
+            "price": 55749,
+            "date": "2022-02-03T12:00:00.000Z"
+        },
+        {
+            "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+            "name": "Товары",
+            "parentId": None,
+            "type": "CATEGORY",
+            "price": 58599,
+            "date": "2022-02-03T15:00:00.000Z"
+        }
+    ]
+}
+
+UPDATE_WITH_CHANGES = [
+    {
+        "items": [
+            {
+                "type": "CATEGORY",
+                "name": "Дорогие телевизоры",
+                "id": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+                "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
+            },
+            {
+                "type": "OFFER",
+                "name": "Samson 70\" LED UHD Smart",
+                "id": "98883e8f-0507-482f-bce2-2fb306cf6483",
+                "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+                "price": 52999
+            },
+            {
+                "type": "OFFER",
+                "name": "Phyllis 50\" LED UHD Smarter",
+                "id": "74b81fda-9cdc-4b63-8927-c978afed5cf4",
+                "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+                "price": 89999
+            }
+        ],
+        "updateDate": "2022-02-11T12:00:00.000Z"
+    },
+    {
+        "items": [
+            {
+                "type": "OFFER",
+                "name": "Goldstar 65\" LED UHD LOL Very Smart",
+                "id": "73bc3b36-02d1-4245-ab35-3106c9ee1c65",
+                "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+                "price": 109999
+            }
+        ],
+        "updateDate": "2022-02-12T10:21:20.000Z"
+    }
+]
+
+EXPECTED_TREE_AFTER_CHANGES = {
+    "type": "CATEGORY",
+    "name": "Товары",
+    "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+    "price": 78599,
+    "parentId": None,
+    "date": "2022-02-12T10:21:20.000Z",
+    "children": [
+        {
+            "type": "CATEGORY",
+            "name": "Дорогие телевизоры",
+            "id": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+            "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+            "price": 84332,
+            "date": "2022-02-12T10:21:20.000Z",
+            "children": [
+                {
+                    "type": "OFFER",
+                    "name": "Samson 70\" LED UHD Smart",
+                    "id": "98883e8f-0507-482f-bce2-2fb306cf6483",
+                    "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+                    "price": 52999,
+                    "date": "2022-02-11T12:00:00.000Z",
+                    "children": None,
+                },
+                {
+                    "type": "OFFER",
+                    "name": "Phyllis 50\" LED UHD Smarter",
+                    "id": "74b81fda-9cdc-4b63-8927-c978afed5cf4",
+                    "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+                    "price": 89999,
+                    "date": "2022-02-11T12:00:00.000Z",
+                    "children": None
+                },
+                {
+                    "type": "OFFER",
+                    "name": "Goldstar 65\" LED UHD LOL Very Smart",
+                    "id": "73bc3b36-02d1-4245-ab35-3106c9ee1c65",
+                    "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+                    "price": 109999,
+                    "date": "2022-02-12T10:21:20.000Z",
+                    "children": None
+                }
+            ]
+        },
+        {
+            "type": "CATEGORY",
+            "name": "Смартфоны",
+            "id": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
+            "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+            "price": 69999,
+            "date": "2022-02-02T12:00:00.000Z",
+            "children": [
+                {
+                    "type": "OFFER",
+                    "name": "jPhone 13",
+                    "id": "863e1a7a-1304-42ae-943b-179184c077e3",
+                    "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
+                    "price": 79999,
+                    "date": "2022-02-02T12:00:00.000Z",
+                    "children": None
+                },
+                {
+                    "type": "OFFER",
+                    "name": "Xomiа Readme 10",
+                    "id": "b1d8fd7d-2ae3-47d5-b2f9-0f094af800d4",
+                    "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
+                    "price": 59999,
+                    "date": "2022-02-02T12:00:00.000Z",
+                    "children": None
+                }
+            ]
+        },
+    ]
+}
+
+SALES_RESPONSE = {
+    'items': [{'id': '73bc3b36-02d1-4245-ab35-3106c9ee1c65', 'name': 'Goldstar 65" LED UHD LOL Very Smart',
+               'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2', 'type': 'OFFER', 'price': 109999,
+               'date': '2022-02-12T10:21:20.000Z'},
+              {'id': '74b81fda-9cdc-4b63-8927-c978afed5cf4', 'name': 'Phyllis 50" LED UHD Smarter',
+               'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2', 'type': 'OFFER', 'price': 89999,
+               'date': '2022-02-11T12:00:00.000Z'},
+              {'id': '98883e8f-0507-482f-bce2-2fb306cf6483', 'name': 'Samson 70" LED UHD Smart',
+               'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2', 'type': 'OFFER', 'price': 52999,
+               'date': '2022-02-11T12:00:00.000Z'}]
+    }
+
 
 def deep_sort_children(node):
     if node.get("children"):
@@ -403,24 +569,22 @@ def request(url: str, method: str = "GET", json_data=None, json_response=False):
 
 
 def test_import():
-    for index, batch in enumerate(UPDATE_WITHOUT_CHANGES):
-        print(f"Importing batch {index}")
+    for index, batch in enumerate(IMPORT_BATCHES):
         status, _ = request("/imports", method="POST", json_data=batch)
 
-        assert status == 200, f"Expected HTTP status code 200, got {status}"
-
+        assert status == fastapi_status.HTTP_200_OK, f"Expected HTTP status code 200, got {status}"
     print("Test import passed.")
 
 
 def test_nodes():
     status, response = request(f"/nodes/{ROOT_ID}", json_response=True)
 
-    assert status == 200, f"Expected HTTP status code 200, got {status}"
+    assert status == fastapi_status.HTTP_200_OK, f"Expected HTTP status code 200, got {status}"
 
     deep_sort_children(response)
     deep_sort_children(EXPECTED_TREE)
 
-    if response == EXPECTED_TREE:
+    if response != EXPECTED_TREE:
         print_diff(EXPECTED_TREE, response)
         print("Response tree doesn't match expected tree.")
         sys.exit(1)
@@ -428,16 +592,63 @@ def test_nodes():
     print("Test nodes passed.")
 
 
+def test_stats():
+    status, response = request(
+        f"/node/{ROOT_ID}/statistic", json_response=True)
+
+    assert status == 200, f"Expected HTTP status code 200, got {status}"
+
+    deep_sort_children(response)
+    deep_sort_children(EXPECTED_STATS)
+
+    if response != EXPECTED_STATS:
+        print_diff(EXPECTED_STATS, response)
+        print("Response doesn't match expected.")
+        sys.exit(1)
+    print("Test stats passed.")
+
+
+def test_update_with_changes():
+    for index, batch in enumerate(UPDATE_WITH_CHANGES):
+        print(f"Importing batch {index}")
+        status, _ = request("/imports", method="POST", json_data=batch)
+
+    status, response = request(f"/nodes/{ROOT_ID}", json_response=True)
+    assert status == fastapi_status.HTTP_200_OK, f"Expected HTTP status code 200, got {status}"
+
+    deep_sort_children(response)
+    deep_sort_children(EXPECTED_TREE_AFTER_CHANGES)
+
+    if response != EXPECTED_TREE_AFTER_CHANGES:
+        print_diff(EXPECTED_TREE_AFTER_CHANGES, response)
+        print("Response tree doesn't match expected tree.")
+        sys.exit(1)
+
+
+def test_sales():
+    params = parse.urlencode({
+        "date": "2022-02-12T11:00:00.000Z"
+    })
+    status, response = request(f"/sales?{params}", json_response=True)
+
+    assert status == 200, f"Expected HTTP status code 200, got {status}"
+
+    deep_sort_children(response)
+    deep_sort_children(SALES_RESPONSE)
+
+    if response != SALES_RESPONSE:
+        print_diff(SALES_RESPONSE, response)
+        print("Response tree doesn't match expected tree.")
+        sys.exit(1)
+
+
 def test_update_without_change():
-    """"""
     for index, batch in enumerate(UPDATE_WITHOUT_CHANGES):
         print(f"Importing batch {index}")
         status, _ = request("/imports", method="POST", json_data=batch)
 
-        assert status == 200, f"Expected HTTP status code 200, got {status}"
-
     status, response = request(f"/nodes/{ROOT_ID}", json_response=True)
-    assert status == 200, f"Expected HTTP status code 200, got {status}"
+    assert status == fastapi_status.HTTP_200_OK, f"Expected HTTP status code 200, got {status}"
 
     deep_sort_children(response)
     deep_sort_children(EXPECTED_TREE_AFTER_NO_CHANGES)
@@ -448,27 +659,6 @@ def test_update_without_change():
         sys.exit(1)
 
 
-# def test_sales():
-#     params = urllib.parse.urlencode({
-#         "date": "2022-02-04T00:00:00.000Z"
-#     })
-#     status, response = request(f"/sales?{params}", json_response=True)
-#     assert status == 200, f"Expected HTTP status code 200, got {status}"
-#     print("Test sales passed.")
-#
-#
-# def test_stats():
-#     params = urllib.parse.urlencode({
-#         "dateStart": "2022-02-01T00:00:00.000Z",
-#         "dateEnd": "2022-02-03T00:00:00.000Z"
-#     })
-#     status, response = request(
-#         f"/node/{ROOT_ID}/statistic?{params}", json_response=True)
-#
-#     assert status == 200, f"Expected HTTP status code 200, got {status}"
-#     print("Test stats passed.")
-#
-#
 def test_delete():
     status, _ = request(f"/delete/{ROOT_ID}", method="DELETE")
     assert status == 200, f"Expected HTTP status code 200, got {status}"
@@ -476,4 +666,16 @@ def test_delete():
     status, _ = request(f"/nodes/{ROOT_ID}")
     assert status == 404, f"Expected HTTP status code 404, got {status}"
 
+    status, _ = request(f"/nodes/d515e43f-f3f6-4471-bb77-6b455017a2d2")
+    assert status == 404, f"Expected HTTP status code 404, got {status}"
+
+    status, _ = request(f"/nodes/b1d8fd7d-2ae3-47d5-b2f9-0f094af800d4")
+    assert status == 404, f"Expected HTTP status code 404, got {status}"
+
     print("Test delete passed.")
+
+
+if __name__ == '__main__':
+    import pytest
+
+    pytest.main()

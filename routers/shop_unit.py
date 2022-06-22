@@ -1,6 +1,8 @@
 import datetime
 import uuid
 
+from typing import Union
+
 from fastapi import APIRouter, Depends, Response, status
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.orm import Session
@@ -62,8 +64,6 @@ def safe_create_or_update_shop_unit(db: Session, unit: schemas.ShopUnitImport, s
 async def imports(data: schemas.ShopUnitImportRequest, db: Session = Depends(get_db)):
     shop_unit_dict = {}
 
-    print(data)
-
     # проверка уникальности id всех элементов в запросе и создание
     # слова формата айди: данные, для более удобной и быстрой работы с данными
     for unit in data.items:
@@ -97,6 +97,7 @@ async def delete(id: uuid.UUID, db: Session = Depends(get_db)):
 
 @router.get("/nodes/{id}", response_model=schemas.ShopUnit)
 async def nodes(id: uuid.UUID, db: Session = Depends(get_db)):
+    print(id)
     unit = get_shop_unit(db, id)
     if unit:
         return get_shop_unit(db, id)
@@ -115,13 +116,17 @@ async def sales(date: str, db: Session = Depends(get_db)):
     return result
 
 
-@router.get("/nodes/{id}/statistic", response_model=schemas.ShopUnitStatisticResponse)
-async def nodes_statistic(id: uuid.UUID, date_start: str, date_end: str, db: Session = Depends(get_db)):
+@router.get("/node/{id}/statistic", response_model=schemas.ShopUnitStatisticResponse)
+async def nodes_statistic(id: uuid.UUID, dateStart: Union[None, str] = None, dateEnd: Union[None, str] = None,
+                          db: Session = Depends(get_db)):
     try:
-        date_start = datetime.datetime.strptime(is_datetime_string_iso8601(date_start), "%Y-%m-%dT%H:%M:%S.%fZ")
-        date_end = datetime.datetime.strptime(is_datetime_string_iso8601(date_end), "%Y-%m-%dT%H:%M:%S.%fZ")
-        if date_start >= date_end:
-            raise RequestValidationError("invalid interval. date_start must be < date_end")
+        date_start, date_end = None, None
+        if dateStart is not None:
+            date_start = datetime.datetime.strptime(is_datetime_string_iso8601(dateStart), "%Y-%m-%dT%H:%M:%S.%fZ")
+        if dateEnd is not None:
+            date_end = datetime.datetime.strptime(is_datetime_string_iso8601(dateEnd), "%Y-%m-%dT%H:%M:%S.%fZ")
+        if date_start and date_end and date_start >= date_end:
+            raise RequestValidationError("invalid interval. dateStart must be < date_end")
     except ValueError:
         raise RequestValidationError("invalid date format. Date must be in iso8601 format")
 

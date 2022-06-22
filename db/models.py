@@ -1,4 +1,4 @@
-from sqlalchemy import Enum, Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import Enum, Column, ForeignKey, Integer, String, DateTime, Boolean
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -26,11 +26,11 @@ class Category(ShopUnit):
 
     parentId = Column(UUID(as_uuid=True), ForeignKey("categories.id", ondelete='CASCADE'))
     children_category = relationship("Category",
-                                     backref=backref('parent', remote_side="Category.id"),
+                                     backref=backref('parent_category', remote_side="Category.id"),
                                      cascade="all, delete",
                                      passive_deletes=True)
     children_offer = relationship("Offer",
-                                  backref=backref('parent', remote_side="Category.id"),
+                                  backref=backref('parent_category', remote_side="Category.id"),
                                   cascade="all, delete",
                                   passive_deletes=True)
 
@@ -63,4 +63,7 @@ class ShopUnitHistory(ShopUnit):
     id = Column(UUID(as_uuid=True), primary_key=False, index=True)
     type = Column(Enum(ShopUnitType), nullable=False)
     parentId = Column(UUID(as_uuid=True))
-    price = Column(Integer, nullable=False)
+    price = Column(Integer, nullable=True)
+
+    # Если True - первая запись в истории данного объекта
+    is_object_creation = Column(Boolean, default=False)

@@ -24,14 +24,19 @@ def get_shop_unit(db: Session, id: uuid.UUID):
 def get_offer_list_sales(db: Session, date_end: datetime.datetime):
     date_start = date_end - datetime.timedelta(hours=24)
     history_rows = db.query(ShopUnitHistory.id).filter(ShopUnitHistory.date > date_start).filter(
-        ShopUnitHistory.date < date_end).filter(ShopUnitHistory.type == ShopUnitType.offer).distinct(
+        ShopUnitHistory.date < date_end).filter(ShopUnitHistory.type == ShopUnitType.offer).filter(
+        ShopUnitHistory.is_object_creation == False).distinct(
         ShopUnitHistory.id).all()
     return [get_offer(db, row[0]) for row in history_rows]
 
 
 def get_unit_statistic(db: Session, id: uuid.UUID, date_start: datetime.datetime, date_end: datetime.datetime):
-    return db.query(ShopUnitHistory).filter(ShopUnitHistory.id == id).filter(ShopUnitHistory.date > date_start).filter(
-        ShopUnitHistory.date < date_end).all()
+    r = db.query(ShopUnitHistory).filter(ShopUnitHistory.id == id)
+    if date_start:
+        r = r.filter(ShopUnitHistory.date > date_start)
+    if date_end:
+        r = r.filter(ShopUnitHistory.date > date_end)
+    return r.all()
 
 
 def is_category_exists(db: Session, id: uuid.UUID) -> bool:
@@ -46,7 +51,8 @@ def create_offer(db: Session, data: schemas_unit.ShopUnitImport, date: datetime.
     db.refresh(db_unit)
 
     if data.parentId:
-        update_unit_parents_data(db, None, db_unit.parentId, None, db_unit.price, date)
+        update_unit_parents_data(db, old_parent_id=None, new_parent_id=db_unit.parentId, old_price=None,
+                                 new_price=db_unit.price, date=date)
 
     return db_unit
 
@@ -58,7 +64,8 @@ def create_category(db: Session, data: schemas_unit.ShopUnitImport, date: dateti
     db.refresh(db_unit)
 
     if data.parentId:
-        update_unit_parents_data(db, None, db_unit.parentId, None, None, date)
+        update_unit_parents_data(db, old_parent_id=None, new_parent_id=db_unit.parentId, old_price=None,
+                                 new_price=db_unit.price, date=date)
 
     return db_unit
 
@@ -70,15 +77,22 @@ def create_shop_unit(db: Session, data: schemas_unit.ShopUnitImport, date: datet
         unit = create_offer(db, data, date)
     else:
         raise ValueError("invalid shop unit type")
-    update_date_and_history(db, unit, date)
+    update_date_and_history(db, unit, date, is_object_creation=True)
 
     return unit
 
 
-def create_shop_unit_history(db: Session, db_unit: [Category, Offer]):
+def create_shop_unit_history(db: Session, db_unit: [Category, Offer], is_object_creation=False):
     unit = schemas_unit.ShopUnit.from_orm(db_unit)
-    history_object = ShopUnitHistory(**unit.dict(include={"id", "type", "name", "parentId", "price", "date"}))
-    db.add(history_object)
+    history_object = db.query(ShopUnitHistory).filter(ShopUnitHistory.id == unit.id).filter(
+        ShopUnitHistory.date == unit.date).first()
+    if history_object:
+        for key, val in unit.dict().items():
+            setattr(history_object, key, val)
+    else:
+        history_object = ShopUnitHistory(**unit.dict(include={"id", "type", "name", "parentId", "price", "date"}),
+                                         is_object_creation=is_object_creation)
+        db.add(history_object)
     db.commit()
     db.refresh(history_object)
 
@@ -148,7 +162,6 @@ def update_unit_parents_data(db: Session, old_parent_id: Optional[uuid.UUID], ne
     """
     if old_parent_id is None and new_parent_id is None:
         return
-
     if old_parent_id == new_parent_id:
         parent = get_shop_unit(db, old_parent_id)
         old_summary_price = parent.summary_price
@@ -165,7 +178,7 @@ def update_unit_parents_data(db: Session, old_parent_id: Optional[uuid.UUID], ne
             if old_price:
                 old_summary_price = parent.summary_price
                 parent.summary_price -= old_price
-                recalculate_category_price(db, parent, date, old_summary_price, -1)
+                recalculate_category_price(db, parent, date, old_summary_price, offers_change_count=-1)
             elif date:
                 update_date_and_history(db, parent, date)
 
@@ -174,15 +187,15 @@ def update_unit_parents_data(db: Session, old_parent_id: Optional[uuid.UUID], ne
             if new_price:
                 old_summary_price = parent.summary_price
                 parent.summary_price += new_price
-                recalculate_category_price(db, parent, date, old_summary_price, 1)
+                recalculate_category_price(db, parent, date, old_summary_price, offers_change_count=1)
             elif date:
                 update_date_and_history(db, parent, date)
     db.commit()
 
 
-def update_date_and_history(db: Session, unit: [Category, Offer], date: datetime.datetime):
+def update_date_and_history(db: Session, unit: [Category, Offer], date: datetime.datetime, is_object_creation=False):
     unit.date = date
-    create_shop_unit_history(db, unit)
+    create_shop_unit_history(db, unit, is_object_creation)
     db.commit()
 
 
@@ -191,15 +204,12 @@ def create_or_update_shop_unit(db: Session, unit: schemas_unit.ShopUnitImport, d
     if db_unit:
         update_shop_unit(db, db_unit, unit, date)
     else:
+        delete_history_by_shop_unit_id(db, unit.id)
         return create_shop_unit(db, unit, date)
 
 
-def delete_offer(db: Session, id: uuid.UUID):
-    return db.query(Offer).filter(Offer.id == id).first()
-
-
-def delete_category(db: Session, id: uuid.UUID):
-    return db.query(Category).filter(Category.id == id).first()
+def delete_history_by_shop_unit_id(db: Session, unit_id: uuid.UUID):
+    return db.query(ShopUnitHistory).filter(ShopUnitHistory.id == unit_id).delete()
 
 
 def delete_shop_unit(db: Session, unit: [Category, Offer]):

@@ -105,10 +105,13 @@ class ShopUnitStatisticUnit(ShopUnitBase):
         orm_mode = True
 
 
-# TODO проверка даты на iso в скидках и истории
-
 class ShopUnitStatisticResponse(BaseModel):
     items: List[ShopUnitStatisticUnit] = Field(description="История в произвольном порядке.")
+
+    class Config:
+        json_encoders = {
+            datetime.datetime: convert_datetime_to_iso_8601_with_z_suffix_and_utc
+        }
 
 
 ShopUnit.update_forward_refs()

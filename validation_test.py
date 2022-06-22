@@ -140,25 +140,43 @@ def test_unique_id_in_request():
 
 
 def test_date_validation():
-    data = {
-        "items": [
-            {
-                "type": "CATEGORY",
-                "name": "Товары",
-                "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
-                "parentId": None,
-            }
-        ],
-        "updateDate": "2022.02.01 14:00:00"
-    }
+    dates = ["2022.02.01 14:00:00", "2022.02.01T14:00:00", "2022.02.30T14:00:00.000Z", 22323223]
+    for i in dates:
+        data = {
+            "items": [
+                {
+                    "type": "CATEGORY",
+                    "name": "Товары",
+                    "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+                    "parentId": None,
+                }
+            ],
+            "updateDate": i
+        }
 
-    response = client.post(
-        "/imports",
-        json=data
-    )
-    assert response.status_code == 400
-    assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}
+        response = client.post(
+            "/imports",
+            json=data
+        )
+        assert response.status_code == 400
+        assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}
+
 
 # /nodes/{id}
+def test_nodes_validation():
+    ids = ["1212131", "sdfsdfsf"]
+    for id in ids:
+        response = client.get(f"/nodes/{id}")
+
+        assert response.status_code == 400
+        assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}
+
 
 # /delete/{id}
+def test_delete_validation():
+    ids = ["1212131", "sdfsdfsf"]
+    for id in ids:
+        response = client.delete(f"/delete/{id}")
+
+        assert response.status_code == 400
+        assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}
