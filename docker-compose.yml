@@ -3,12 +3,12 @@ version: '3.8'
 services:
   web:
     build: .
-    command: uvicorn app.main:app --host 0.0.0.0
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     restart: always
     volumes:
       - .:/app
     ports:
-      - 8008:8000
+      - 80:8000
     environment:
       - POSTGRES_URL_DOCKER=postgresql://yandex:A8lOApWmNGigLuKu@db:5432/yandex_shbr
     depends_on:
