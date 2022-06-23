@@ -2,10 +2,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from core.env import SQLALCHEMY_DATABASE_URL
+from core.config import settings
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"options": "-c timezone=utc"}
+    settings.db_url_from_docker or settings.db_url_from_env, connect_args={"options": "-c timezone=utc"}
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

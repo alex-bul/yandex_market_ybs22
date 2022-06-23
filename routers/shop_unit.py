@@ -97,7 +97,6 @@ async def delete(id: uuid.UUID, db: Session = Depends(get_db)):
 
 @router.get("/nodes/{id}", response_model=schemas.ShopUnit)
 async def nodes(id: uuid.UUID, db: Session = Depends(get_db)):
-    print(id)
     unit = get_shop_unit(db, id)
     if unit:
         return get_shop_unit(db, id)

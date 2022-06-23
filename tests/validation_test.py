@@ -224,5 +224,4 @@ def test_node_statistic_interval():
 
     assert_validation_error_by_response(response)
 
-# TODO создать документацию
 # TODO деплой, перезагрзка

@@ -28,8 +28,6 @@ models.Base.metadata.create_all(bind=engine)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    # TODO убрать
-    print(exc.args)
     return validation_error_response
 
 
