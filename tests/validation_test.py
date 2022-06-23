@@ -37,7 +37,7 @@ CATEGORY_VALIDATION_ACTIONS = [
 offer_import = {
     "type": "OFFER",
     "name": "Xomiа Readme 10",
-    "id": "b1d8fd7d-2ae3-47d5-b2f9-0f094af800d4",
+    "id": "b1d8fd7d-2ae3-47d5-b2f9-0f094af800d5",
     "price": 59999,
 }
 
@@ -77,21 +77,21 @@ def test_category_imports_validation():
 
 
 def test_change_type():
-    date = offer_import.copy()
+    data = offer_import.copy()
 
     client.post(
         "/imports",
-        json=date
+        json=data
     )
 
-    date["type"] = "CATEGORY"
+    data["type"] = "CATEGORY"
 
     response = client.post(
         "/imports",
-        json=date
+        json=data
     )
 
-    client.delete(f"/delete/{date['id']}")
+    client.delete(f"/delete/{data['id']}")
 
     assert_validation_error_by_response(response, "Shop unit cant change type")
 
@@ -224,4 +224,4 @@ def test_node_statistic_interval():
 
     assert_validation_error_by_response(response)
 
-# TODO деплой, перезагрзка
+# TODO добавить доку к коду

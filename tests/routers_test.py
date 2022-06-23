@@ -15,6 +15,8 @@ from fastapi import status as fastapi_status
 from fastapi.testclient import TestClient
 from main import app
 
+from pathlib import Path
+
 client = TestClient(app)
 
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
@@ -306,7 +308,7 @@ UPDATE_WITHOUT_CHANGES = [
     }
 ]
 
-EXPECTED_TREE_AFTER_NO_CHANGES = {
+EXPECTED_TREE_AFTER_CHANGES_2 = {
     "type": "CATEGORY",
     "name": "Товары",
     "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
@@ -547,6 +549,73 @@ SALES_RESPONSE = {
                'date': '2022-02-11T12:00:00.000Z'}]
 }
 
+EXPECTED_TREE_AFTER_DELETE = {
+    "children": [
+        {
+            "children": [
+                {
+                    "children": None,
+                    "date": "2022-02-08T07:00:00.000Z",
+                    "id": "73bc3b36-02d1-4245-ab35-3106c9ee1c65",
+                    "name": "Goldstar 65\" LED UHD LOL Very Smart",
+                    "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+                    "price": 69999,
+                    "type": "OFFER"
+                },
+                {
+                    "children": None,
+                    "date": "2022-02-07T12:00:00.000Z",
+                    "id": "98883e8f-0507-482f-bce2-2fb306cf6483",
+                    "name": "Samson 70\" LED UHD Smart",
+                    "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+                    "price": 32999,
+                    "type": "OFFER"
+                }
+            ],
+            "date": "2022-02-08T07:00:00.000Z",
+            "id": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+            "name": "Телевизоры",
+            "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+            "price": 51499,
+            "type": "CATEGORY"
+        },
+        {
+            "children": [
+                {
+                    "children": None,
+                    "date": "2022-02-06T12:00:00.000Z",
+                    "id": "863e1a7a-1304-42ae-943b-179184c077e3",
+                    "name": "jPhone 13",
+                    "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
+                    "price": 79999,
+                    "type": "OFFER"
+                },
+                {
+                    "children": None,
+                    "date": "2022-02-06T12:00:00.000Z",
+                    "id": "b1d8fd7d-2ae3-47d5-b2f9-0f094af800d4",
+                    "name": "Xomiа Readme 10",
+                    "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
+                    "price": 59999,
+                    "type": "OFFER"
+                }
+            ],
+            "date": "2022-02-06T12:00:00.000Z",
+            "id": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
+            "name": "Смартфоны",
+            "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+            "price": 69999,
+            "type": "CATEGORY"
+        }
+    ],
+    "date": "2022-02-08T07:00:00.000Z",
+    "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+    "name": "Товары",
+    "parentId": None,
+    "price": 60749,
+    "type": "CATEGORY"
+}
+
 
 def deep_sort_children(node):
     if node.get("children"):
@@ -557,11 +626,12 @@ def deep_sort_children(node):
 
 
 def print_diff(expected, response):
-    with open("../expected.json", "w") as f:
+    parent_path = Path(__file__).parent.parent
+    with open(parent_path / "expected.json", "w") as f:
         json.dump(expected, f, indent=2, ensure_ascii=False, sort_keys=True)
         f.write("\n")
 
-    with open("../response.json", "w") as f:
+    with open(parent_path / "response.json", "w") as f:
         json.dump(response, f, indent=2, ensure_ascii=False, sort_keys=True)
         f.write("\n")
 
@@ -648,7 +718,7 @@ def test_sales():
         sys.exit(1)
 
 
-def test_update_without_change():
+def test_update_2():
     for index, batch in enumerate(UPDATE_WITHOUT_CHANGES):
         print(f"Importing batch {index}")
         status, _ = request("/imports", method="POST", json_data=batch)
@@ -657,10 +727,28 @@ def test_update_without_change():
     assert status == fastapi_status.HTTP_200_OK, f"Expected HTTP status code 200, got {status}"
 
     deep_sort_children(response)
-    deep_sort_children(EXPECTED_TREE_AFTER_NO_CHANGES)
+    deep_sort_children(EXPECTED_TREE_AFTER_CHANGES_2)
 
-    if response != EXPECTED_TREE_AFTER_NO_CHANGES:
-        print_diff(EXPECTED_TREE_AFTER_NO_CHANGES, response)
+    if response != EXPECTED_TREE_AFTER_CHANGES_2:
+        print_diff(EXPECTED_TREE_AFTER_CHANGES_2, response)
+        print("Response tree doesn't match expected tree.")
+        sys.exit(1)
+
+
+def test_delete_and_checking_updates():
+    ELEMENT_ID = "74b81fda-9cdc-4b63-8927-c978afed5cf4"
+
+    status, _ = request(f"/delete/{ELEMENT_ID}", method="DELETE")
+    assert status == 200, f"Expected HTTP status code 200, got {status}"
+
+    status, response = request(f"/nodes/{ROOT_ID}", json_response=True)
+    assert status == 200, f"Expected HTTP status code 404, got {status}"
+
+    deep_sort_children(response)
+    deep_sort_children(EXPECTED_TREE_AFTER_DELETE)
+
+    if response != EXPECTED_TREE_AFTER_DELETE:
+        print_diff(EXPECTED_TREE_AFTER_DELETE, response)
         print("Response tree doesn't match expected tree.")
         sys.exit(1)
 

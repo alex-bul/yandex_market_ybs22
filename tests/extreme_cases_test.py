@@ -64,12 +64,12 @@ def test_offer_as_parent():
 
 
 def test_not_found_delete():
-    response = client.delete("/delete/069cb8d7-bbdd-47d3-ad8f-82ef4c269df1")
+    response = client.delete("/delete/069cb8d7-bbdd-47d3-ad8f-82ef4c269df2")
 
     assert_not_found_error_by_response(response)
 
 
 def test_not_found_statistic():
-    response = client.get("/node/069cb8d7-bbdd-47d3-ad8f-82ef4c269df1/statistic")
+    response = client.get("/node/069cb8d7-bbdd-47d3-ad8f-82ef4c269df2/statistic")
 
     assert_not_found_error_by_response(response)
