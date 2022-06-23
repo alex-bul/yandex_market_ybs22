@@ -27,7 +27,12 @@ def get_offer_list_sales(db: Session, date_end: datetime.datetime):
         ShopUnitHistory.date < date_end).filter(ShopUnitHistory.type == ShopUnitType.offer).filter(
         ShopUnitHistory.is_object_creation == False).distinct(
         ShopUnitHistory.id).all()
-    return [get_offer(db, row[0]) for row in history_rows]
+    result = []
+    for row in history_rows:
+        item = get_offer(db, row[0])
+        if item:
+            result.append(item)
+    return result
 
 
 def get_unit_statistic(db: Session, id: uuid.UUID, date_start: datetime.datetime, date_end: datetime.datetime):

@@ -2,7 +2,13 @@
 
 import json
 import subprocess
+
 import sys
+import os
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
 
 from urllib import parse
 from fastapi import status as fastapi_status
@@ -539,7 +545,7 @@ SALES_RESPONSE = {
               {'id': '98883e8f-0507-482f-bce2-2fb306cf6483', 'name': 'Samson 70" LED UHD Smart',
                'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2', 'type': 'OFFER', 'price': 52999,
                'date': '2022-02-11T12:00:00.000Z'}]
-    }
+}
 
 
 def deep_sort_children(node):
@@ -551,11 +557,11 @@ def deep_sort_children(node):
 
 
 def print_diff(expected, response):
-    with open("expected.json", "w") as f:
+    with open("../expected.json", "w") as f:
         json.dump(expected, f, indent=2, ensure_ascii=False, sort_keys=True)
         f.write("\n")
 
-    with open("response.json", "w") as f:
+    with open("../response.json", "w") as f:
         json.dump(response, f, indent=2, ensure_ascii=False, sort_keys=True)
         f.write("\n")
 
@@ -660,17 +666,28 @@ def test_update_without_change():
 
 
 def test_delete():
+    # delete
     status, _ = request(f"/delete/{ROOT_ID}", method="DELETE")
     assert status == 200, f"Expected HTTP status code 200, got {status}"
+
+    # check deletion result
+    status, _ = request(f"/nodes/{ROOT_ID}")
+    assert status == 404, f"Expected HTTP status code 404, got {status}"
+
+    status, _ = request("/nodes/d515e43f-f3f6-4471-bb77-6b455017a2d2")
+    assert status == 404, f"Expected HTTP status code 404, got {status}"
+
+    status, _ = request("/nodes/b1d8fd7d-2ae3-47d5-b2f9-0f094af800d4")
+    assert status == 404, f"Expected HTTP status code 404, got {status}"
 
     status, _ = request(f"/nodes/{ROOT_ID}")
     assert status == 404, f"Expected HTTP status code 404, got {status}"
 
-    status, _ = request(f"/nodes/d515e43f-f3f6-4471-bb77-6b455017a2d2")
-    assert status == 404, f"Expected HTTP status code 404, got {status}"
-
-    status, _ = request(f"/nodes/b1d8fd7d-2ae3-47d5-b2f9-0f094af800d4")
-    assert status == 404, f"Expected HTTP status code 404, got {status}"
+    params = parse.urlencode({
+        "date": "2022-02-12T11:00:00.000Z"
+    })
+    status, response = request(f"/sales?{params}", json_response=True)
+    assert response == {"items": []}
 
     print("Test delete passed.")
 

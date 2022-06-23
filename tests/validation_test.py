@@ -1,6 +1,16 @@
+import sys
+import os
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
+from urllib import parse
+
 from fastapi import status
 from fastapi.testclient import TestClient
 
+from tests.utils import assert_validation_error_by_response
 from main import app
 
 client = TestClient(app)
@@ -49,9 +59,8 @@ def test_offer_imports_validation():
             "/imports",
             json=data
         )
-        assert response.status_code == 400
-        assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}, \
-            fail_description.format(val)
+
+        assert_validation_error_by_response(response, fail_description.format(val))
 
 
 def test_category_imports_validation():
@@ -63,9 +72,28 @@ def test_category_imports_validation():
             "/imports",
             json=data
         )
-        assert response.status_code == 400
-        assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}, \
-            fail_description.format(val)
+
+        assert_validation_error_by_response(response, fail_description.format(val))
+
+
+def test_change_type():
+    date = offer_import.copy()
+
+    client.post(
+        "/imports",
+        json=date
+    )
+
+    date["type"] = "CATEGORY"
+
+    response = client.post(
+        "/imports",
+        json=date
+    )
+
+    client.delete(f"/delete/{date['id']}")
+
+    assert_validation_error_by_response(response, "Shop unit cant change type")
 
 
 def test_category_price_validation():
@@ -86,8 +114,7 @@ def test_category_price_validation():
         "/imports",
         json=data
     )
-    assert response.status_code == 400
-    assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}
+    assert_validation_error_by_response(response)
 
 
 def test_offer_price_validation():
@@ -107,7 +134,7 @@ def test_offer_price_validation():
         "/imports",
         json=data
     )
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}
 
 
@@ -135,8 +162,7 @@ def test_unique_id_in_request():
         "/imports",
         json=data
     )
-    assert response.status_code == 400
-    assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}
+    assert_validation_error_by_response(response)
 
 
 def test_date_validation():
@@ -158,8 +184,7 @@ def test_date_validation():
             "/imports",
             json=data
         )
-        assert response.status_code == 400
-        assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}
+        assert_validation_error_by_response(response)
 
 
 # /nodes/{id}
@@ -168,8 +193,7 @@ def test_nodes_validation():
     for id in ids:
         response = client.get(f"/nodes/{id}")
 
-        assert response.status_code == 400
-        assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}
+        assert_validation_error_by_response(response)
 
 
 # /delete/{id}
@@ -178,5 +202,27 @@ def test_delete_validation():
     for id in ids:
         response = client.delete(f"/delete/{id}")
 
-        assert response.status_code == 400
-        assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}
+        assert_validation_error_by_response(response)
+
+
+# /sales
+def test_sales_validation():
+    dates = ["2022.02.01 14:00:00", "2022.02.01T14:00:00", "2022.02.30T14:00:00.000Z", 22323223]
+    for i in dates:
+        response = client.get("/sales")
+
+        assert_validation_error_by_response(response)
+
+
+# /node/{id}/statistic
+def test_node_statistic_interval():
+    params = parse.urlencode({
+        "dateStart": "2022-02-12T11:00:00.000Z",
+        "dateEnd": "2022-02-10T11:00:00.000Z"
+    })
+    response = client.get(f"/node/069cb8d7-bbdd-47d3-ad8f-82ef4c269df1/statistic?{params}")
+
+    assert_validation_error_by_response(response)
+
+# TODO создать документацию
+# TODO деплой, перезагрзка

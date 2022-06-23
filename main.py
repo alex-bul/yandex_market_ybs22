@@ -10,6 +10,7 @@ from db.database import engine
 
 from routers import shop_unit
 
+
 app = FastAPI()
 app.include_router(shop_unit.router, responses={
     400: {
@@ -33,4 +34,4 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 if __name__ == '__main__':
-    uvicorn.run('main:app', port=8000, host='127.0.0.1', reload=True)
+    uvicorn.run('main:app', port=80, host='127.0.0.1', reload=True)
