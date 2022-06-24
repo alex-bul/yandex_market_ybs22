@@ -64,6 +64,3 @@ class ShopUnitHistory(ShopUnit):
     type = Column(Enum(ShopUnitType), nullable=False)
     parentId = Column(UUID(as_uuid=True))
     price = Column(Integer, nullable=True)
-
-    # Если True - первая запись в истории данного объекта
-    is_object_creation = Column(Boolean, default=False)

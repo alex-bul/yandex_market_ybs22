@@ -53,10 +53,14 @@ def safe_create_or_update_shop_unit(db: Session, unit: schemas.ShopUnitImport, s
     """
     parent_status = get_parent_status(db, unit.parentId, shop_unit_dict)
     if parent_status == 'exist':
+        # если родительская категория уже существует, то создаём/обновляем элемент
         create_or_update_shop_unit(db, unit, date)
     elif parent_status == 'need_create':
+        # если родительской категории ещё нет в базе данных, но она есть в запросе
         safe_create_or_update_shop_unit(db, shop_unit_dict[unit.parentId], shop_unit_dict, date)
+        # после того, как категория создана, то создаём/обновляем элемент
         create_or_update_shop_unit(db, unit, date)
+    # удаляем элемент из очереди обработки после создания/обновления
     del shop_unit_dict[unit.id]
 
 

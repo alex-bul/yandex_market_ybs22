@@ -19,6 +19,7 @@ class ShopUnitType(str, Enum):
 
 
 class ShopUnitBase(BaseModel):
+    """Базовый шаблон маркет-объекта"""
     id: uuid.UUID = Field(description="Уникальный идентификатор",
                           example="3fa85f64-5717-4562-b3fc-2c963f66a333",
                           nullable=False)
@@ -46,6 +47,9 @@ class ShopUnitBase(BaseModel):
 
 
 class ShopUnit(ShopUnitBase):
+    """
+    Объект товара/категории
+    """
     date: datetime.datetime = Field(description="Время последнего обновления элемента.",
                                     nullable=False,
                                     example="2022-05-28T21:12:01.000Z")
@@ -86,6 +90,9 @@ class ShopUnitImport(ShopUnitBase):
 
 
 class ShopUnitImportRequest(BaseModel):
+    """
+    Запрос импорта
+    """
     items: List[ShopUnitImport]
     updateDate: datetime.datetime = Field(description="Время обновления добавляемых товаров/категорий.",
                                           nullable=False,
@@ -97,6 +104,9 @@ class ShopUnitImportRequest(BaseModel):
 
 
 class ShopUnitStatisticUnit(ShopUnitBase):
+    """
+    Объект товара/категории для статистики
+    """
     date: datetime.datetime = Field(description="Время последнего обновления элемента.",
                                     nullable=False,
                                     example="2022-05-28T21:12:01.000Z")
@@ -106,6 +116,9 @@ class ShopUnitStatisticUnit(ShopUnitBase):
 
 
 class ShopUnitStatisticResponse(BaseModel):
+    """
+    Статистика
+    """
     items: List[ShopUnitStatisticUnit] = Field(description="История в произвольном порядке.")
 
     class Config:

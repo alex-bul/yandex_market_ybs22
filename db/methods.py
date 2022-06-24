@@ -22,10 +22,10 @@ def get_shop_unit(db: Session, id: uuid.UUID):
 
 
 def get_offer_list_sales(db: Session, date_end: datetime.datetime):
+    """Получение скидок за последние 24 часа от переданной даты"""
     date_start = date_end - datetime.timedelta(hours=24)
-    history_rows = db.query(ShopUnitHistory.id).filter(ShopUnitHistory.date > date_start).filter(
-        ShopUnitHistory.date < date_end).filter(ShopUnitHistory.type == ShopUnitType.offer).filter(
-        ShopUnitHistory.is_object_creation == False).distinct(
+    history_rows = db.query(ShopUnitHistory.id).filter(ShopUnitHistory.date >= date_start).filter(
+        ShopUnitHistory.date <= date_end).filter(ShopUnitHistory.type == ShopUnitType.offer).distinct(
         ShopUnitHistory.id).all()
     result = []
     for row in history_rows:
@@ -36,11 +36,12 @@ def get_offer_list_sales(db: Session, date_end: datetime.datetime):
 
 
 def get_unit_statistic(db: Session, id: uuid.UUID, date_start: datetime.datetime, date_end: datetime.datetime):
+    """Получение истории изменений за выбранный промежуток"""
     r = db.query(ShopUnitHistory).filter(ShopUnitHistory.id == id)
     if date_start:
-        r = r.filter(ShopUnitHistory.date > date_start)
+        r = r.filter(ShopUnitHistory.date >= date_start)
     if date_end:
-        r = r.filter(ShopUnitHistory.date > date_end)
+        r = r.filter(ShopUnitHistory.date >= date_end)
     return r.all()
 
 
@@ -55,6 +56,7 @@ def create_offer(db: Session, data: schemas_unit.ShopUnitImport, date: datetime.
     db.commit()
     db.refresh(db_unit)
 
+    # если у элемента есть родитель, то обновляем информацию о нём
     if data.parentId:
         update_unit_parents_data(db, old_parent_id=None, new_parent_id=db_unit.parentId, old_price=None,
                                  new_price=db_unit.price, date=date)
@@ -68,6 +70,7 @@ def create_category(db: Session, data: schemas_unit.ShopUnitImport, date: dateti
     db.commit()
     db.refresh(db_unit)
 
+    # если у элемента есть родитель, то обновляем информацию о нём
     if data.parentId:
         update_unit_parents_data(db, old_parent_id=None, new_parent_id=db_unit.parentId, old_price=None,
                                  new_price=db_unit.price, date=date)
@@ -76,27 +79,32 @@ def create_category(db: Session, data: schemas_unit.ShopUnitImport, date: dateti
 
 
 def create_shop_unit(db: Session, data: schemas_unit.ShopUnitImport, date: datetime.datetime):
+    """Создание маркет-объекта с учетом типа"""
     if data.type == ShopUnitType.category:
         unit = create_category(db, data, date)
     elif data.type == ShopUnitType.offer:
         unit = create_offer(db, data, date)
     else:
         raise ValueError("invalid shop unit type")
-    update_date_and_history(db, unit, date, is_object_creation=True)
+    update_date_and_history(db, unit, date)
 
     return unit
 
 
-def create_shop_unit_history(db: Session, db_unit: [Category, Offer], is_object_creation=False):
+def create_shop_unit_history(db: Session, db_unit: [Category, Offer]):
+    """Создание записи в истории изменений об объекте"""
     unit = schemas_unit.ShopUnit.from_orm(db_unit)
+
+    # Проверяем, существует ли уже объект истории с этим маркет-объектом на текущую дату.
+    # Это предотвращает создание дублей в истории с одной и той же датой,
+    # если объект изменялся несколько раз за один запрос
     history_object = db.query(ShopUnitHistory).filter(ShopUnitHistory.id == unit.id).filter(
         ShopUnitHistory.date == unit.date).first()
     if history_object:
         for key, val in unit.dict().items():
             setattr(history_object, key, val)
     else:
-        history_object = ShopUnitHistory(**unit.dict(include={"id", "type", "name", "parentId", "price", "date"}),
-                                         is_object_creation=is_object_creation)
+        history_object = ShopUnitHistory(**unit.dict(include={"id", "type", "name", "parentId", "price", "date"}))
         db.add(history_object)
     db.commit()
     db.refresh(history_object)
@@ -106,6 +114,7 @@ def create_shop_unit_history(db: Session, db_unit: [Category, Offer], is_object_
 
 def update_shop_unit(db: Session, unit: [Category, Offer], unit_import: schemas_unit.ShopUnitImport,
                      date: datetime.datetime):
+    """Обновление маркет-объекта"""
     old_parent_id = unit.parentId
 
     update_dict = unit_import.dict()
@@ -115,11 +124,15 @@ def update_shop_unit(db: Session, unit: [Category, Offer], unit_import: schemas_
     if isinstance(unit, Category):
         del update_dict['price']
 
-        # при обновлении категории средняя цена не меняется
+        # Новая и старая цена - суммарная цена категории.
+        # При обновлении объекта категории её цена не меняется (меняется только при изменении дочерних элементов),
+        # поэтому они одинаковы
         old_price = unit.summary_price
         new_price = unit.summary_price
     else:
+        # старая цена - текущая цена у элемента в базе
         old_price = unit.price
+        # новая цена - переданная в запросе обновления
         new_price = unit_import.price
 
     for key, val in update_dict.items():
@@ -134,16 +147,32 @@ def update_shop_unit(db: Session, unit: [Category, Offer], unit_import: schemas_
 
 def recalculate_category_price(db: Session, category: Category, date: Optional[datetime.datetime],
                                old_summary_price: int, offers_change_count: int):
+    """
+    Пересчитывает цену категории после изменения состоящих в ней элементов
+    :param db: сессия sqlalchemy
+    :param category: объект категории
+    :param date: дата изменения
+    :param old_summary_price: суммарная цена элементов из категории до текущего изменения
+    :param offers_change_count: на сколько изменилось количество элементов в составе категории.
+        Например -1 - один удалился, 0 - без изменений и т.п.
+    :return:
+    """
+    # изменяем количество элементов в категории
     category.offers_count += offers_change_count
     children_count = category.offers_count
+
     if children_count:
+        # если категория не пуста (кол-во детей > 0), то обновляем среднюю цену
         category.price = category.summary_price // children_count
     else:
+        # иначе средняя None
         category.price = None
     if date:
+        # если дата указана, то обновляем ее и историю
         update_date_and_history(db, unit=category, date=date)
     db.commit()
     if category.parentId:
+        # если у текущей категории есть родитель, то обновляем его
         update_unit_parents_data(db, category.parentId, category.parentId, old_summary_price,
                                  category.summary_price, date, offers_change_count=offers_change_count)
 
@@ -165,50 +194,64 @@ def update_unit_parents_data(db: Session, old_parent_id: Optional[uuid.UUID], ne
     :param offers_change_count: число, на которое меняется общее количество товаров в категории
     :return:
     """
+    # если у объекта старый и новый владелец отсутствуют, то никакие изменения производить не надо
     if old_parent_id is None and new_parent_id is None:
         return
+
+    # Проверка на то, менялся ли владелец или нет
     if old_parent_id == new_parent_id:
+
+        # Если владелец не менялся, то обрабатываем единого владельца
         parent = get_shop_unit(db, old_parent_id)
         old_summary_price = parent.summary_price
 
         if old_price != new_price:
             old_price = int(old_price or 0)
             new_price = int(new_price or 0)
+            # изменяем суммарную стоимость категории
             parent.summary_price += (new_price - old_price)
 
         recalculate_category_price(db, parent, date, old_summary_price, offers_change_count)
     else:
+        # отдельно обрабатываем нового и старого родителя, если они есть
         if old_parent_id:
             parent = get_shop_unit(db, old_parent_id)
+            # если цена не None, то отнимаем у старого владельца, обрабатываем изменения
             if old_price:
                 old_summary_price = parent.summary_price
                 parent.summary_price -= old_price
                 recalculate_category_price(db, parent, date, old_summary_price, offers_change_count=-1)
             elif date:
+                # если цена None, то обновляем дату и историю, если дата указана
                 update_date_and_history(db, parent, date)
 
         if new_parent_id:
             parent = get_shop_unit(db, new_parent_id)
+            # если цена не None, то прибавляем новому владельцу, обрабатываем изменения
             if new_price:
                 old_summary_price = parent.summary_price
                 parent.summary_price += new_price
                 recalculate_category_price(db, parent, date, old_summary_price, offers_change_count=1)
             elif date:
+                # если цена None, то обновляем дату и историю, если дата указана
                 update_date_and_history(db, parent, date)
     db.commit()
 
 
-def update_date_and_history(db: Session, unit: [Category, Offer], date: datetime.datetime, is_object_creation=False):
+def update_date_and_history(db: Session, unit: [Category, Offer], date: datetime.datetime):
+    """Обновляет дату последнего изменения и создает запись в истории"""
     unit.date = date
-    create_shop_unit_history(db, unit, is_object_creation)
+    create_shop_unit_history(db, unit)
     db.commit()
 
 
 def create_or_update_shop_unit(db: Session, unit: schemas_unit.ShopUnitImport, date: datetime.datetime):
+    """Создает или обновляет маркет-объект в зависимости от того существует ли он или нет"""
     db_unit = get_shop_unit(db, unit.id)
     if db_unit:
         update_shop_unit(db, db_unit, unit, date)
     else:
+        # Объект с таким id мог существовать ранее, поэтому удаляем из истории данные о нём
         delete_history_by_shop_unit_id(db, unit.id)
         return create_shop_unit(db, unit, date)
 
