@@ -30,6 +30,7 @@ def get_offer_list_sales(db: Session, date_end: datetime.datetime):
     result = []
     for row in history_rows:
         item = get_offer(db, row[0])
+        # проверяем наличие товара в базе. Если он существует, то добавляем в результирующий список
         if item:
             result.append(item)
     return result
@@ -50,7 +51,7 @@ def is_category_exists(db: Session, id: uuid.UUID) -> bool:
     return category is not None
 
 
-def create_offer(db: Session, data: schemas_unit.ShopUnitImport, date: datetime.datetime):
+def create_offer(db: Session, data: schemas_unit.ShopUnitImport, date: datetime.datetime) -> Offer:
     db_unit = Offer(**data.dict(exclude={"type"}), date=date)
     db.add(db_unit)
     db.commit()
@@ -64,7 +65,7 @@ def create_offer(db: Session, data: schemas_unit.ShopUnitImport, date: datetime.
     return db_unit
 
 
-def create_category(db: Session, data: schemas_unit.ShopUnitImport, date: datetime.datetime):
+def create_category(db: Session, data: schemas_unit.ShopUnitImport, date: datetime.datetime) -> Category:
     db_unit = Category(**data.dict(exclude={"type"}), date=date)
     db.add(db_unit)
     db.commit()
@@ -78,7 +79,7 @@ def create_category(db: Session, data: schemas_unit.ShopUnitImport, date: dateti
     return db_unit
 
 
-def create_shop_unit(db: Session, data: schemas_unit.ShopUnitImport, date: datetime.datetime):
+def create_shop_unit(db: Session, data: schemas_unit.ShopUnitImport, date: datetime.datetime) -> [Category, Offer]:
     """Создание маркет-объекта с учетом типа"""
     if data.type == ShopUnitType.category:
         unit = create_category(db, data, date)
@@ -191,7 +192,9 @@ def update_unit_parents_data(db: Session, old_parent_id: Optional[uuid.UUID], ne
     :param old_price: старая цена товара
     :param new_price: новая цена товара
     :param date: дата изменения
-    :param offers_change_count: число, на которое меняется общее количество товаров в категории
+    :param offers_change_count: число, на которое меняется общее количество товаров в категории. По умолчанию == 0.
+        Параметр является техническим и служит для корректного обновления вышестоящих категорий от родительской
+        изначального объекта, поэтому не требуется указывать его
     :return:
     """
     # если у объекта старый и новый владелец отсутствуют, то никакие изменения производить не надо
@@ -263,7 +266,9 @@ def delete_history_by_shop_unit_id(db: Session, unit_id: uuid.UUID):
 def delete_shop_unit(db: Session, unit: [Category, Offer]):
     db.delete(unit)
 
+    # если есть родительская категория, то обновляем её
     if unit.parentId:
+        # по-разному получаем старую цену в зависимости от типа маркет-объекта
         old_price = unit.price if isinstance(unit, Offer) else unit.summary_price
         update_unit_parents_data(db, unit.parentId, None, old_price, None, None)
 

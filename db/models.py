@@ -36,11 +36,14 @@ class Category(ShopUnit):
 
     price = Column(Integer, nullable=True)
 
+    # суммарная цена категории
     summary_price = Column(Integer, nullable=False, default=0)
+    # кол-во товаров в категории
     offers_count = Column(Integer, nullable=False, default=0)
 
     type = ShopUnitType.category
 
+    # объединяем дочерние элементы разного типа в один список
     @property
     def children(self):
         return self.children_category + self.children_offer
