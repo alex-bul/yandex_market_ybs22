@@ -5,7 +5,8 @@ from sqlalchemy.orm import sessionmaker
 from core.config import settings
 
 engine = create_engine(
-    settings.db_url_from_docker or settings.db_url_from_env, connect_args={"options": "-c timezone=utc"}
+    settings.db_url_from_docker or settings.db_url_from_env, connect_args={"options": "-c timezone=utc"},
+    pool_size=100, max_overflow=10
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
