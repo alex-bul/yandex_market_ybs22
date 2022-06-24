@@ -32,7 +32,8 @@ models.Base.metadata.create_all(bind=engine)
 # обработчик ошибки валидации
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    print(exc.args)
+    # можно раскомментировать print, чтобы видеть причину ошибки
+    # print(exc.args)
     return validation_error_response
 
 
