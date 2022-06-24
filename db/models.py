@@ -11,7 +11,7 @@ class ShopUnit(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, index=True)
     name = Column(String, nullable=False)
-    date = Column(DateTime(timezone=False), nullable=False)
+    date = Column(DateTime(timezone=True), nullable=False)
 
     def as_dict(self, exclude=None):
         if exclude is None:
