@@ -47,14 +47,14 @@ IMPORT_BATCHES = [
                 "name": "jPhone 13",
                 "id": "863e1a7a-1304-42ae-943b-179184c077e3",
                 "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
-                "price": 79999
+                "price": 2
             },
             {
                 "type": "OFFER",
                 "name": "Xomiа Readme 10",
                 "id": "b1d8fd7d-2ae3-47d5-b2f9-0f094af800d4",
                 "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
-                "price": 59999
+                "price": 2
             }
         ],
         "updateDate": "2022-02-02T12:00:00.000Z"
@@ -72,14 +72,14 @@ IMPORT_BATCHES = [
                 "name": "Samson 70\" LED UHD Smart",
                 "id": "98883e8f-0507-482f-bce2-2fb306cf6483",
                 "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                "price": 32999
+                "price": 3
             },
             {
                 "type": "OFFER",
                 "name": "Phyllis 50\" LED UHD Smarter",
                 "id": "74b81fda-9cdc-4b63-8927-c978afed5cf4",
                 "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                "price": 49999
+                "price": 3
             }
         ],
         "updateDate": "2022-02-03T12:00:00.000Z"
@@ -91,7 +91,7 @@ IMPORT_BATCHES = [
                 "name": "Goldstar 65\" LED UHD LOL Very Smart",
                 "id": "73bc3b36-02d1-4245-ab35-3106c9ee1c65",
                 "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                "price": 69999
+                "price": 6
             }
         ],
         "updateDate": "2022-02-03T15:00:00.000Z"
@@ -102,7 +102,7 @@ EXPECTED_TREE = {
     "type": "CATEGORY",
     "name": "Товары",
     "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
-    "price": 58599,
+    "price": 3,
     "parentId": None,
     "date": "2022-02-03T15:00:00.000Z",
     "children": [
@@ -111,7 +111,7 @@ EXPECTED_TREE = {
             "name": "Телевизоры",
             "id": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
             "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
-            "price": 50999,
+            "price": 4,
             "date": "2022-02-03T15:00:00.000Z",
             "children": [
                 {
@@ -119,7 +119,7 @@ EXPECTED_TREE = {
                     "name": "Samson 70\" LED UHD Smart",
                     "id": "98883e8f-0507-482f-bce2-2fb306cf6483",
                     "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                    "price": 32999,
+                    "price": 3,
                     "date": "2022-02-03T12:00:00.000Z",
                     "children": None,
                 },
@@ -128,7 +128,7 @@ EXPECTED_TREE = {
                     "name": "Phyllis 50\" LED UHD Smarter",
                     "id": "74b81fda-9cdc-4b63-8927-c978afed5cf4",
                     "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                    "price": 49999,
+                    "price": 3,
                     "date": "2022-02-03T12:00:00.000Z",
                     "children": None
                 },
@@ -137,7 +137,7 @@ EXPECTED_TREE = {
                     "name": "Goldstar 65\" LED UHD LOL Very Smart",
                     "id": "73bc3b36-02d1-4245-ab35-3106c9ee1c65",
                     "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                    "price": 69999,
+                    "price": 6,
                     "date": "2022-02-03T15:00:00.000Z",
                     "children": None
                 }
@@ -148,7 +148,7 @@ EXPECTED_TREE = {
             "name": "Смартфоны",
             "id": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
             "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
-            "price": 69999,
+            "price": 2,
             "date": "2022-02-02T12:00:00.000Z",
             "children": [
                 {
@@ -156,7 +156,7 @@ EXPECTED_TREE = {
                     "name": "jPhone 13",
                     "id": "863e1a7a-1304-42ae-943b-179184c077e3",
                     "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
-                    "price": 79999,
+                    "price": 2,
                     "date": "2022-02-02T12:00:00.000Z",
                     "children": None
                 },
@@ -165,7 +165,7 @@ EXPECTED_TREE = {
                     "name": "Xomiа Readme 10",
                     "id": "b1d8fd7d-2ae3-47d5-b2f9-0f094af800d4",
                     "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
-                    "price": 59999,
+                    "price": 2,
                     "date": "2022-02-02T12:00:00.000Z",
                     "children": None
                 }
@@ -227,82 +227,6 @@ IMPORT_BY_ONE_REQUEST = {
     "updateDate": "2022-02-24T09:00:00.000Z"
 }
 
-UPDATE_WITHOUT_CHANGES = [
-    {
-        "items": [
-            {
-                "type": "CATEGORY",
-                "name": "Товары",
-                "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
-                "parentId": None
-            }
-        ],
-        "updateDate": "2022-02-05T12:00:00.000Z"
-    },
-    {
-        "items": [
-            {
-                "type": "CATEGORY",
-                "name": "Смартфоны",
-                "id": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
-                "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
-            },
-            {
-                "type": "OFFER",
-                "name": "jPhone 13",
-                "id": "863e1a7a-1304-42ae-943b-179184c077e3",
-                "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
-                "price": 79999
-            },
-            {
-                "type": "OFFER",
-                "name": "Xomiа Readme 10",
-                "id": "b1d8fd7d-2ae3-47d5-b2f9-0f094af800d4",
-                "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
-                "price": 59999
-            }
-        ],
-        "updateDate": "2022-02-06T12:00:00.000Z"
-    },
-    {
-        "items": [
-            {
-                "type": "CATEGORY",
-                "name": "Телевизоры",
-                "id": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
-            },
-            {
-                "type": "OFFER",
-                "name": "Samson 70\" LED UHD Smart",
-                "id": "98883e8f-0507-482f-bce2-2fb306cf6483",
-                "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                "price": 32999
-            },
-            {
-                "type": "OFFER",
-                "name": "Phyllis 50\" LED UHD Smarter",
-                "id": "74b81fda-9cdc-4b63-8927-c978afed5cf4",
-                "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                "price": 49999
-            }
-        ],
-        "updateDate": "2022-02-07T12:00:00.000Z"
-    },
-    {
-        "items": [
-            {
-                "type": "OFFER",
-                "name": "Goldstar 65\" LED UHD LOL Very Smart",
-                "id": "73bc3b36-02d1-4245-ab35-3106c9ee1c65",
-                "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                "price": 69999
-            }
-        ],
-        "updateDate": "2022-02-08T07:00:00.000Z"
-    }
-]
-
 EXPECTED_STATS = {
     "items": [
         {
@@ -318,7 +242,7 @@ EXPECTED_STATS = {
             "name": "Товары",
             "parentId": None,
             "type": "CATEGORY",
-            "price": 69999,
+            "price": 2,
             "date": "2022-02-02T12:00:00.000Z"
         },
         {
@@ -326,7 +250,7 @@ EXPECTED_STATS = {
             "name": "Товары",
             "parentId": None,
             "type": "CATEGORY",
-            "price": 55749,
+            "price": 2,
             "date": "2022-02-03T12:00:00.000Z"
         },
         {
@@ -334,7 +258,7 @@ EXPECTED_STATS = {
             "name": "Товары",
             "parentId": None,
             "type": "CATEGORY",
-            "price": 58599,
+            "price": 3,
             "date": "2022-02-03T15:00:00.000Z"
         }
     ]
@@ -354,14 +278,14 @@ UPDATE_WITH_CHANGES = [
                 "name": "Samson 70\" LED UHD Smart",
                 "id": "98883e8f-0507-482f-bce2-2fb306cf6483",
                 "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                "price": 52999
+                "price": 4
             },
             {
                 "type": "OFFER",
                 "name": "Phyllis 50\" LED UHD Smarter",
                 "id": "74b81fda-9cdc-4b63-8927-c978afed5cf4",
                 "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                "price": 89999
+                "price": 4
             }
         ],
         "updateDate": "2022-02-11T12:00:00.000Z"
@@ -373,7 +297,7 @@ UPDATE_WITH_CHANGES = [
                 "name": "Goldstar 65\" LED UHD LOL Very Smart",
                 "id": "73bc3b36-02d1-4245-ab35-3106c9ee1c65",
                 "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                "price": 109999
+                "price": 8
             }
         ],
         "updateDate": "2022-02-12T10:21:20.000Z"
@@ -384,7 +308,7 @@ EXPECTED_TREE_AFTER_CHANGES = {
     "type": "CATEGORY",
     "name": "Товары",
     "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
-    "price": 78599,
+    "price": 4,
     "parentId": None,
     "date": "2022-02-12T10:21:20.000Z",
     "children": [
@@ -393,7 +317,7 @@ EXPECTED_TREE_AFTER_CHANGES = {
             "name": "Дорогие телевизоры",
             "id": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
             "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
-            "price": 84332,
+            "price": 5,
             "date": "2022-02-12T10:21:20.000Z",
             "children": [
                 {
@@ -401,7 +325,7 @@ EXPECTED_TREE_AFTER_CHANGES = {
                     "name": "Samson 70\" LED UHD Smart",
                     "id": "98883e8f-0507-482f-bce2-2fb306cf6483",
                     "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                    "price": 52999,
+                    "price": 4,
                     "date": "2022-02-11T12:00:00.000Z",
                     "children": None,
                 },
@@ -410,7 +334,7 @@ EXPECTED_TREE_AFTER_CHANGES = {
                     "name": "Phyllis 50\" LED UHD Smarter",
                     "id": "74b81fda-9cdc-4b63-8927-c978afed5cf4",
                     "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                    "price": 89999,
+                    "price": 4,
                     "date": "2022-02-11T12:00:00.000Z",
                     "children": None
                 },
@@ -419,7 +343,7 @@ EXPECTED_TREE_AFTER_CHANGES = {
                     "name": "Goldstar 65\" LED UHD LOL Very Smart",
                     "id": "73bc3b36-02d1-4245-ab35-3106c9ee1c65",
                     "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-                    "price": 109999,
+                    "price": 8,
                     "date": "2022-02-12T10:21:20.000Z",
                     "children": None
                 }
@@ -430,7 +354,7 @@ EXPECTED_TREE_AFTER_CHANGES = {
             "name": "Смартфоны",
             "id": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
             "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
-            "price": 69999,
+            "price": 2,
             "date": "2022-02-02T12:00:00.000Z",
             "children": [
                 {
@@ -438,7 +362,7 @@ EXPECTED_TREE_AFTER_CHANGES = {
                     "name": "jPhone 13",
                     "id": "863e1a7a-1304-42ae-943b-179184c077e3",
                     "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
-                    "price": 79999,
+                    "price": 2,
                     "date": "2022-02-02T12:00:00.000Z",
                     "children": None
                 },
@@ -447,7 +371,7 @@ EXPECTED_TREE_AFTER_CHANGES = {
                     "name": "Xomiа Readme 10",
                     "id": "b1d8fd7d-2ae3-47d5-b2f9-0f094af800d4",
                     "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
-                    "price": 59999,
+                    "price": 2,
                     "date": "2022-02-02T12:00:00.000Z",
                     "children": None
                 }
@@ -458,13 +382,13 @@ EXPECTED_TREE_AFTER_CHANGES = {
 
 SALES_RESPONSE = {
     'items': [{'id': '73bc3b36-02d1-4245-ab35-3106c9ee1c65', 'name': 'Goldstar 65" LED UHD LOL Very Smart',
-               'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2', 'type': 'OFFER', 'price': 109999,
+               'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2', 'type': 'OFFER', 'price': 8,
                'date': '2022-02-12T10:21:20.000Z'},
               {'id': '74b81fda-9cdc-4b63-8927-c978afed5cf4', 'name': 'Phyllis 50" LED UHD Smarter',
-               'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2', 'type': 'OFFER', 'price': 89999,
+               'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2', 'type': 'OFFER', 'price': 4,
                'date': '2022-02-11T12:00:00.000Z'},
               {'id': '98883e8f-0507-482f-bce2-2fb306cf6483', 'name': 'Samson 70" LED UHD Smart',
-               'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2', 'type': 'OFFER', 'price': 52999,
+               'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2', 'type': 'OFFER', 'price': 4,
                'date': '2022-02-11T12:00:00.000Z'}]
 }
 
@@ -473,7 +397,7 @@ EXPECTED_TREE_AFTER_DELETE = {
     "name": "Товары",
     "parentId": None,
     "type": "CATEGORY",
-    "price": 75749,
+    "price": 4,
     "date": "2022-02-12T10:21:20.000Z",
     "children": [
         {
@@ -481,7 +405,7 @@ EXPECTED_TREE_AFTER_DELETE = {
             "name": "Смартфоны",
             "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
             "type": "CATEGORY",
-            "price": 69999,
+            "price": 2,
             "date": "2022-02-02T12:00:00.000Z",
             "children": [
                 {
@@ -489,7 +413,7 @@ EXPECTED_TREE_AFTER_DELETE = {
                     "name": "jPhone 13",
                     "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
                     "type": "OFFER",
-                    "price": 79999,
+                    "price": 2,
                     "date": "2022-02-02T12:00:00.000Z",
                     "children": None
                 },
@@ -498,7 +422,7 @@ EXPECTED_TREE_AFTER_DELETE = {
                     "name": "Xomiа Readme 10",
                     "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
                     "type": "OFFER",
-                    "price": 59999,
+                    "price": 2,
                     "date": "2022-02-02T12:00:00.000Z",
                     "children": None
                 }
@@ -509,7 +433,7 @@ EXPECTED_TREE_AFTER_DELETE = {
             "name": "Дорогие телевизоры",
             "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
             "type": "CATEGORY",
-            "price": 81499,
+            "price": 6,
             "date": "2022-02-12T10:21:20.000Z",
             "children": [
                 {
@@ -517,7 +441,7 @@ EXPECTED_TREE_AFTER_DELETE = {
                     "name": "Samson 70\" LED UHD Smart",
                     "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
                     "type": "OFFER",
-                    "price": 52999,
+                    "price": 4,
                     "date": "2022-02-11T12:00:00.000Z",
                     "children": None
                 },
@@ -526,7 +450,7 @@ EXPECTED_TREE_AFTER_DELETE = {
                     "name": "Goldstar 65\" LED UHD LOL Very Smart",
                     "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
                     "type": "OFFER",
-                    "price": 109999,
+                    "price": 8,
                     "date": "2022-02-12T10:21:20.000Z",
                     "children": None
                 }
@@ -565,6 +489,7 @@ def request(url: str, method: str = "GET", json_data=None, json_response=False):
 
 @pytest.mark.run(order=1)
 def test_import():
+    """Тест импорта"""
     for index, batch in enumerate(IMPORT_BATCHES):
         status, _ = request("/imports", method="POST", json_data=batch)
 
@@ -574,6 +499,7 @@ def test_import():
 
 @pytest.mark.run(order=2)
 def test_nodes():
+    """Тест запроса элемента"""
     status, response = request(f"/nodes/{ROOT_ID}", json_response=True)
 
     assert status == fastapi_status.HTTP_200_OK, f"Expected HTTP status code 200, got {status}"
@@ -591,14 +517,14 @@ def test_nodes():
 
 @pytest.mark.run(order=3)
 def test_stats():
+    """Тест истории изменений"""
     status, response = request(
         f"/node/{ROOT_ID}/statistic", json_response=True)
 
     assert status == 200, f"Expected HTTP status code 200, got {status}"
 
-    print(response)
-    deep_sort_children(response)
-    deep_sort_children(EXPECTED_STATS)
+    response['items'].sort(key=lambda x: x["date"])
+    EXPECTED_STATS['items'].sort(key=lambda x: x["date"])
 
     if response != EXPECTED_STATS:
         print_diff(EXPECTED_STATS, response)
@@ -609,6 +535,7 @@ def test_stats():
 
 @pytest.mark.run(order=4)
 def test_update_with_changes():
+    """Тест обновления"""
     for index, batch in enumerate(UPDATE_WITH_CHANGES):
         print(f"Importing batch {index}")
         status, _ = request("/imports", method="POST", json_data=batch)
@@ -627,6 +554,7 @@ def test_update_with_changes():
 
 @pytest.mark.run(order=5)
 def test_sales():
+    """Тест скидок"""
     params = parse.urlencode({
         "date": "2022-02-12T11:00:00.000Z"
     })
@@ -645,6 +573,7 @@ def test_sales():
 
 @pytest.mark.run(order=6)
 def test_delete_and_checking_updates():
+    """Удаление и проверка изменений зависящий объектов"""
     ELEMENT_ID = "74b81fda-9cdc-4b63-8927-c978afed5cf4"
 
     status, _ = request(f"/delete/{ELEMENT_ID}", method="DELETE")
@@ -664,6 +593,9 @@ def test_delete_and_checking_updates():
 
 @pytest.mark.run(order=7)
 def test_order_when_update():
+    """Тестирование импорта одним запросом.
+    Проверка того, чтобы скрипт создал в правильном порядке
+     и не вызвал ошибок: сначала родительские категории, потом их товары"""
     status, _ = request("/imports", method="POST", json_data=IMPORT_BY_ONE_REQUEST)
 
     assert status == 200, f"Expected HTTP status code 200, got {status}"
@@ -671,6 +603,8 @@ def test_order_when_update():
 
 @pytest.mark.run(order=8)
 def test_delete():
+    """Тест удаления и проверка, что элементы действительно удалились"""
+
     # delete
     status, _ = request(f"/delete/{ROOT_ID}", method="DELETE")
     assert status == 200, f"Expected HTTP status code 200, got {status}"

@@ -4,7 +4,7 @@ import uuid
 from enum import Enum
 from typing import List, ForwardRef, Literal, Optional
 
-from pydantic import BaseModel, Field, validator, constr, conint
+from pydantic import BaseModel, Field, validator, constr, conint, Extra
 
 from core.utils import convert_datetime_to_iso_8601_with_z_suffix_and_utc
 from core.validators import is_datetime_string_iso8601
@@ -41,6 +41,7 @@ class ShopUnitBase(BaseModel):
                                        nullable=True)
 
     class Config:
+        extra = Extra.forbid
         json_encoders = {
             datetime.datetime: convert_datetime_to_iso_8601_with_z_suffix_and_utc
         }
@@ -122,6 +123,7 @@ class ShopUnitStatisticResponse(BaseModel):
     items: List[ShopUnitStatisticUnit] = Field(description="История в произвольном порядке.")
 
     class Config:
+        extra = Extra.forbid
         json_encoders = {
             datetime.datetime: convert_datetime_to_iso_8601_with_z_suffix_and_utc
         }

@@ -23,10 +23,12 @@ OFFER_VALIDATION_ACTIONS = [
     ("name", None, "Excepted Validation error. Name cannot be None, current name == {0}"),
     ("name", 3213, "Excepted Validation error. Name cannot be None, current name == {0}"),
     ("id", 213, "Excepted Validation error. Id must be uuid object, current id == {0}"),
+    ("id", None, "Excepted Validation error. Id must be uuid object, current id == {0}"),
     ("ParentId", "fsdfdfs", "Excepted Validation error. ParentId must be uuid object, current ParentId == {0}"),
     ("ParentId", 213, "Excepted Validation error. ParentId must be uuid object, current ParentId == {0}"),
     ("price", None, "Excepted Validation error. Price must be >= 0, current price == {0}"),
     ("price", -2000, "Excepted Validation error. Price must be >= 0, current price == {0}"),
+    ("extra_field", -2000, "Excepted Validation error. Extra field mustnt exist, current extra_field == {0}"),
 ]
 
 # Большая часть параметров была проверена при импорте оффера
@@ -223,5 +225,3 @@ def test_node_statistic_interval():
     response = client.get(f"/node/069cb8d7-bbdd-47d3-ad8f-82ef4c269df1/statistic?{params}")
 
     assert_validation_error_by_response(response)
-
-# TODO добавить доку к коду

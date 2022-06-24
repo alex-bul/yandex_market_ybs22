@@ -18,3 +18,9 @@ def assert_not_found_error_by_response(response: Response,
     assert response.json() == {"code": status.HTTP_404_NOT_FOUND,
                                "message": "Item not found"}, f"Response must be " \
                                                              f"not found error, got {response.json()}"
+
+
+def assert_ok_response(response: Response,
+                       fail_description_status_code="Excepted 200 http status code, got {}"):
+    assert response.status_code == status.HTTP_200_OK, fail_description_status_code.format(
+        response.status_code)

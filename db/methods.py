@@ -42,7 +42,7 @@ def get_unit_statistic(db: Session, id: uuid.UUID, date_start: datetime.datetime
     if date_start:
         r = r.filter(ShopUnitHistory.date >= date_start)
     if date_end:
-        r = r.filter(ShopUnitHistory.date >= date_end)
+        r = r.filter(ShopUnitHistory.date <= date_end)
     return r.all()
 
 
@@ -220,7 +220,7 @@ def update_unit_parents_data(db: Session, old_parent_id: Optional[uuid.UUID], ne
         if old_parent_id:
             parent = get_shop_unit(db, old_parent_id)
             # если цена не None, то отнимаем у старого владельца, обрабатываем изменения
-            if old_price:
+            if old_price is not None:
                 old_summary_price = parent.summary_price
                 parent.summary_price -= old_price
                 recalculate_category_price(db, parent, date, old_summary_price, offers_change_count=-1)
@@ -231,7 +231,7 @@ def update_unit_parents_data(db: Session, old_parent_id: Optional[uuid.UUID], ne
         if new_parent_id:
             parent = get_shop_unit(db, new_parent_id)
             # если цена не None, то прибавляем новому владельцу, обрабатываем изменения
-            if new_price:
+            if new_price is not None:
                 old_summary_price = parent.summary_price
                 parent.summary_price += new_price
                 recalculate_category_price(db, parent, date, old_summary_price, offers_change_count=1)
