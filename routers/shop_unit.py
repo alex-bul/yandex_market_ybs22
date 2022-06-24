@@ -111,6 +111,7 @@ async def nodes(id: uuid.UUID, db: Session = Depends(get_db)):
 @router.get("/sales", response_model=schemas.ShopUnitStatisticResponse)
 async def sales(date: str, db: Session = Depends(get_db)):
     try:
+        # валидация даты
         date = datetime.datetime.strptime(is_datetime_string_iso8601(date), "%Y-%m-%dT%H:%M:%S.%fZ")
     except ValueError:
         raise RequestValidationError("invalid date format. Date must be in iso8601 format")
@@ -123,12 +124,13 @@ async def sales(date: str, db: Session = Depends(get_db)):
 async def nodes_statistic(id: uuid.UUID, dateStart: Union[None, str] = None, dateEnd: Union[None, str] = None,
                           db: Session = Depends(get_db)):
     try:
+        # валидация временного интервала
         date_start, date_end = None, None
         if dateStart is not None:
             date_start = datetime.datetime.strptime(is_datetime_string_iso8601(dateStart), "%Y-%m-%dT%H:%M:%S.%fZ")
         if dateEnd is not None:
             date_end = datetime.datetime.strptime(is_datetime_string_iso8601(dateEnd), "%Y-%m-%dT%H:%M:%S.%fZ")
-        if date_start and date_end and date_start >= date_end:
+        if date_start and date_end and date_start > date_end:
             raise RequestValidationError("invalid interval. dateStart must be < date_end")
     except ValueError:
         raise RequestValidationError("invalid date format. Date must be in iso8601 format")

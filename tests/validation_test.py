@@ -136,8 +136,8 @@ def test_offer_price_validation():
         "/imports",
         json=data
     )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {"code": status.HTTP_400_BAD_REQUEST, "message": "Validation Failed"}
+
+    assert_validation_error_by_response(response)
 
 
 def test_unique_id_in_request():
